@@ -20,9 +20,10 @@ def transform():
             nodes = np.zeros((cus_num+1, 8))
 
             index = 0
-            for line in content[11:]:
+            for line in content[9:]:
                 values = line.strip().split()
-                nodes[index, :] = list(map(float, values)) 
+                nodes[index, 0] = index
+                nodes[index, 1:] = list(map(float, values[1:])) 
                 index += 1
             new_f.write("TYPE : VRPSDPTW\n")
             new_f.write("DIMENSION : %d\n" % (cus_num+1))
