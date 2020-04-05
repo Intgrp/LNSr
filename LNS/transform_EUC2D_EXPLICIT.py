@@ -38,8 +38,10 @@ def transform():
                             (int(nodes[i, 0]), nodes[i, 3], nodes[i, 4],\
                              int(nodes[i, 5]), int(nodes[i, 6]), int(nodes[i, 7])))
             new_f.write("DISTANCETIME_SECTION\n")
-            for i in range(cus_num):
-                for j in range(i+1, cus_num):
+            for i in range(cus_num+1):
+                for j in range(cus_num+1):
+                    if i == j:
+                        continue
                     dist = math.sqrt((nodes[i, 1] - nodes[j, 1]) ** 2 +\
                                      (nodes[i, 2] - nodes[j, 2]) ** 2)
                     new_f.write("%d,%d,%.6f,%.6f\n" % (i, j, dist, dist))
