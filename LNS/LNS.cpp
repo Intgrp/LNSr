@@ -22,7 +22,7 @@ void signalHandler(int signum)
 
 int main(int argc, char **argv)
 {
-    const rlim_t kStackSize = 4086 * 1024 * 1024; // min stack size = 16 MB
+    const rlim_t kStackSize = 4096 * 1024 * 1024; // min stack size = 16 MB
     struct rlimit rl;
     int result;
 
