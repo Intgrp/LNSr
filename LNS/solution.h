@@ -3,6 +3,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <vector>
+#include <unordered_set>
 #include "data.h"
 
 /* attribute definition */
@@ -130,6 +131,67 @@ public:
     bool isempty()
     {
         return this->self.num_cus == 0;
+    }
+
+    std::vector<int> check(Data &data, bool &st_re_DC, bool &smaller_ca, bool &earlier_tw, double &cost)
+    {
+        std::vector<int> nodes;
+        std::vector<int> &nl = this->node_list;
+        int len = int(nl.size());
+
+        // start and end at DC
+        if (nl[0] != data.DC || nl[len-1] != data.DC)
+        {
+            printf("Not starting/ending at DC\n");
+            st_re_DC = false;
+            return nodes;
+        }
+
+        double capacity = data.vehicle.capacity;
+        double distance = 0.0;
+        // double time = this->dep_time;
+        double time = data.start_time;
+        double load = 0.0;
+
+        for (int i = 1; i < len - 1; i++)
+        {
+            nodes.push_back(nl[i]);
+            load += data.node[nl[i]].delivery;
+        }
+
+        if (load > capacity)
+        {
+            smaller_ca = false;
+            printf("Whole delivery > cpacity\n");
+            return nodes;
+        }
+
+        int pre_node = nl[0];
+        for (int i = 1; i < len; i++)
+        {
+            int node = nl[i];
+            load = load - data.node[node].delivery + data.node[node].pickup;
+            if (load > capacity)
+            {
+                smaller_ca = false;
+                printf("Load %f > capacity %f at %d th node: %d, with delivery %f and pickup %f\n",\
+                        load, capacity, i, node, data.node[node].delivery, data.node[node].pickup);
+                return nodes;
+            }
+            time += data.time[pre_node][node];
+            if (time > data.node[node].end)
+            {
+                earlier_tw = false;
+                printf("Arrive at %d th node: %d at time %f > tw end %f",\
+                        i, node, time, data.node[node].end);
+                return nodes;
+            }
+            time = std::max(time, data.node[node].start) + data.node[node].s_time;
+            distance += data.dist[pre_node][node];
+            pre_node = node;
+        }
+        cost = data.vehicle.d_cost + distance * data.vehicle.unit_cost;
+        return nodes;
     }
 };
 
@@ -279,5 +341,48 @@ public:
             std::ofstream out(data.output.c_str());
             out << output_s;
         }
+    }
+
+    bool check(Data &data)
+    {
+        double total_cost = 0.0;
+        int len = this->len();
+        std::unordered_set<int> record;
+        record.reserve(data.customer_num);
+        for (int i = 0; i < len; i++)
+        {
+            // printf("Check route %d\n", i);
+            Route &r = this->get(i);
+            bool st_re_DC = true;
+            bool smaller_ca = true;
+            bool earlier_tw = true;
+            double cost = 0.0;
+            std::vector<int>nodes = r.check(data, st_re_DC, smaller_ca, earlier_tw, cost);
+            if (!st_re_DC || !smaller_ca || !earlier_tw)
+                return false;
+            total_cost += cost;
+            for (auto node : nodes)
+            {
+                if (record.count(node) == 0)
+                    record.insert(node);
+                else if (record.count(node) == 1)
+                {
+                    printf("Duplicate node: %d\n", node);
+                    return false;
+                }
+            }
+        }
+        for (int i = 0; i < data.customer_num + 1; i++)
+        {
+            if (i == data.DC) continue;
+            if (record.count(i) != 1)
+            {
+                printf("Misssing customer: %d\n", i);
+                return false;
+            }
+        }
+
+        printf("This cost %f, check total cost %f, diff %f\n", this->cost, total_cost, total_cost-this->cost);
+        return true;
     }
 };

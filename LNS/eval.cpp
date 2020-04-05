@@ -5,8 +5,6 @@ void chk_route_O_n(Route &r, Data &data, bool &flag, double &cost)
     /* time complexity O(n) */
     std::vector<int> &nl = r.node_list;
     int len = int(nl.size());
-    double capacity = data.vehicle.capacity;
-    double distance = 0.0;
 
     // start and end at DC
     if (nl[0] != data.DC || nl[len-1] != data.DC) {flag = false; return;}
@@ -17,6 +15,8 @@ void chk_route_O_n(Route &r, Data &data, bool &flag, double &cost)
         return;
     }
 
+    double capacity = data.vehicle.capacity;
+    double distance = 0.0;
     double time = data.start_time;
     double load = 0.0;
     for (auto node : nl) {load += data.node[node].delivery;}
@@ -37,6 +37,16 @@ void chk_route_O_n(Route &r, Data &data, bool &flag, double &cost)
 
     flag = true;
     cost = data.vehicle.d_cost + distance * data.vehicle.unit_cost;
+
+    // bool st_re_DC = true;
+    // bool smaller_ca = true;
+    // bool earlier_tw = true;
+    // double new_cost = 0.0;
+    // r.check(data, st_re_DC, smaller_ca, earlier_tw, new_cost);
+    // if (!st_re_DC || !smaller_ca || !earlier_tw)
+    // {
+    //     printf("");
+    // }
 }
 
 bool eval_route(Solution &s, Seq *seqList, int seqListLen, Attr &tmp_attr, Data &data)

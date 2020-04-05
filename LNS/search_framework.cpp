@@ -78,6 +78,7 @@ void search_framework(Data &data, Solution &best_s)
     printf("------------Summary-----------\n");
     printf("Total %d runs, total consumed %d sec\n", run, used);
     best_s.output(data);
+    best_s.check(data);
 }
 
 void initialization(Solution &s, Data &data)

@@ -186,100 +186,120 @@ void regret_insertion(Solution &s, Data &data)
     // find all unrouted nodes
     std::vector<int> record(num_cus + 1, 0);
     find_unrouted(s, record);
-    // <node, route, pos, best_incur_cost, second_incur_cost, inserted_or_not>
-    // route = -1: means a new route
-    // route = -2: means not check yet
-    std::vector<std::tuple<int,int,int,double,double,bool>> unrouted;
-    unrouted.reserve(num_cus);
+    std::vector<int> unrouted_nodes;
+    unrouted_nodes.reserve(data.customer_num);
+
     for (int i = 0; i < num_cus + 1; i++)
     {
         if (i == data.DC) continue;
-        if (record[i] == 0) unrouted.push_back(std::make_tuple(i, -2, 0, double(INFINITY), double(INFINITY), false));
+        if (record[i] == 0)
+            unrouted_nodes.push_back(i);
     }
-    int len = int(unrouted.size());
-    while (len > 0)
+    int unroute_len = int(unrouted_nodes.size());
+    std::vector<bool> inserted(unroute_len, false);
+    // <pos, best incur_cost in the route>
+    // single_node_pm[0] is the incured cost of inserting into new route
+    std::vector<std::tuple<int, double>> single_node_pm(s.len() + 1);
+    single_node_pm.reserve(data.vehicle.max_num);
+
+    std::vector<std::vector<std::tuple<int, double>>> nodes_pm(unroute_len, single_node_pm);
+
+    for (int i = 0; i < unroute_len; i++)
     {
-        // find the one with the max regret value
-        double max_regret = -double(INFINITY);
-        int best_index = -1;
-        for (int i = 0; i < int(unrouted.size()); i++) 
+        auto &single_node_pm = nodes_pm[i];
+        int node = unrouted_nodes[i];
+
+        // build a new route with node {DC, node, DC}
+        Route tmp_r(data);
+        tmp_r.node_list.insert(tmp_r.node_list.begin() + 1, node);
+        bool flag = false;
+        double cost = -1.0;
+        chk_route_O_n(tmp_r, data, flag, cost);
+        if (!flag)
         {
-            auto &n_t = unrouted[i];
-            if(std::get<5>(n_t)) continue;
-            if (std::get<1>(n_t) == -2)
+            printf("Error: Detect not feasible 1-customer route: ");
+            for (auto &node : tmp_r.node_list)
             {
-                // first time in this loop
-                double best_incur_cost = double(INFINITY);
-                int best_route = -2;
-                int best_pos = -1;
-                double second_incur_cost = double(INFINITY);
-                // build a new route with node {DC, node, DC}
+                std::cout << node;
+            }
+            exit(-1);
+        }
+        std::get<0>(single_node_pm[0]) = 1;
+        std::get<1>(single_node_pm[0]) = cost;
+
+        // insert into existing routes, one by one
+        for (int r_index = 0; r_index < s.len(); r_index++)
+        {
+            Route &r = s.get(r_index);
+            double ori_cost = r.cal_cost(data);
+            double best_incur_cost = double(INFINITY);
+            int best_pos = -1;
+            for (int pos = 1; pos < int(r.node_list.size()); pos++)
+            {
                 Route tmp_r(data);
-                tmp_r.node_list.insert(tmp_r.node_list.begin() + 1, std::get<0>(n_t));
+                tmp_r = r;
+                tmp_r.node_list.insert(tmp_r.node_list.begin() + pos, node);
                 bool flag = false;
                 double cost = -1.0;
                 chk_route_O_n(tmp_r, data, flag, cost);
-                if (!flag)
+                if (flag)
                 {
-                    printf("Error: Detect not feasible 1-customer route: ");
-                    for (auto &node : tmp_r.node_list)
+                    double incur_cost = cost - ori_cost;
+                    if (incur_cost - best_incur_cost < -PRECISION)
                     {
-                        std::cout << node;
-                    }
-                    exit(-1);
-                }
-                best_incur_cost = cost;
-                best_route = -1;
-                best_pos = 1;
-                // try to insert into s
-                for (int r_index = 0; r_index < s.len(); r_index++)
-                {
-                    Route &r = s.get(r_index);
-                    double ori_cost = r.cal_cost(data);
-                    for (int pos = 1; pos < int(r.node_list.size()); pos++)
-                    {
-                        Route tmp_r(data);
-                        tmp_r = r;
-                        tmp_r.node_list.insert(tmp_r.node_list.begin() + pos, std::get<0>(n_t));
-                        bool flag = false;
-                        double cost = -1.0;
-                        chk_route_O_n(tmp_r, data, flag, cost);
-                        if (flag)
-                        {
-                            double incur_cost = cost - ori_cost;
-                            if (incur_cost - best_incur_cost < -PRECISION)
-                            {
-                                second_incur_cost = best_incur_cost;
-                                best_incur_cost = incur_cost;
-                                best_route = r_index;
-                                best_pos = pos;
-                            }
-                            else if (incur_cost - second_incur_cost < -PRECISION)
-                            {
-                                second_incur_cost = incur_cost;
-                            }
-                        }
+                        best_incur_cost = incur_cost;
+                        best_pos = pos;
                     }
                 }
-                std::get<1>(n_t) = best_route;
-                std::get<2>(n_t) = best_pos;
-                std::get<3>(n_t) = best_incur_cost;
-                std::get<4>(n_t) = second_incur_cost;
+            }
+            std::get<0>(single_node_pm[r_index+1]) = best_pos;
+            std::get<1>(single_node_pm[r_index+1]) = best_incur_cost;
+        }
+    }
+
+    while (unroute_len > 0)
+    {
+        // find the one with the max regret value
+        double max_regret = -double(INFINITY);
+        int best_node_index = -1;
+        int best_route_index = -2;
+        for (int i = 0; i < int(unrouted_nodes.size()); i++) 
+        {
+            if (inserted[i])
+                continue;
+            auto &single_node_pm = nodes_pm[i];
+            // find the best and the second best insertion cost in single_node_pm
+            double best_incur_cost = std::get<1>(single_node_pm[0]);
+            int best_r = -1;
+            double second_incur_cost = double(INFINITY);
+            for (int r_index = 0; r_index < s.len(); r_index++)
+            {
+                if (std::get<1>(single_node_pm[r_index+1]) - best_incur_cost < -PRECISION)
+                {
+                    second_incur_cost = best_incur_cost;
+                    best_incur_cost = std::get<1>(single_node_pm[r_index+1]);
+                    best_r = r_index;
+                }
+                else if (std::get<1>(single_node_pm[r_index+1]) - second_incur_cost < -PRECISION)
+                {
+                    second_incur_cost = std::get<1>(single_node_pm[r_index+1]);
+                }
             }
             // second_incur_cost = INFINITY, no feasible insertion into s
             // except building a new route. In this case set regret = 0, giving
             // it the minimum priority for insertion
-            double regret = std::get<4>(n_t) - std::get<3>(n_t);
-            if (std::get<4>(n_t) == double(INFINITY)) regret = 0.0;
+            double regret = second_incur_cost - best_incur_cost;
+            if (second_incur_cost == double(INFINITY)) regret = 0.0;
             if (regret - max_regret > PRECISION)
             {
                 max_regret = regret;
-                best_index = i;
+                best_node_index = i;
+                best_route_index = best_r;
             }
         }
         if (max_regret == -double(INFINITY))
         {
-            std::cout << "Eroor: Max regret -INFINITY, this should not happen\n";
+            std::cout << "Error: Max regret -INFINITY, this should not happen\n";
             exit(-1);
         }
         // all nodes have one feasible insertion: building new route
@@ -287,71 +307,95 @@ void regret_insertion(Solution &s, Data &data)
         if (max_regret == 0.0)
         {
             max_regret = double(INFINITY);
-            for (int i = 0; i < int(unrouted.size()); i++)
+            for (int i = 0; i < int(unrouted_nodes.size()); i++)
             {
-                auto &n_t = unrouted[i];
-                if (std::get<5>(n_t)) continue;
-                if (std::get<3>(n_t) - max_regret < -PRECISION)
+                if (inserted[i])
+                    continue;
+                auto &single_node_pm = nodes_pm[i];
+                if (std::get<1>(single_node_pm[0]) - max_regret < -PRECISION)
                 {
-                    max_regret = std::get<3>(n_t);
-                    best_index = i;
+                    max_regret = std::get<1>(single_node_pm[0]);
+                    best_node_index = i;
+                    best_route_index = -1;
                 }
             }
         }
         // insert
-        if (std::get<1>(unrouted[best_index]) == -1)
+        auto &single_node_pm = nodes_pm[best_node_index];
+        int node = unrouted_nodes[best_node_index];
+
+        if (best_route_index == -1)
         {
             // build a new route
             Route r(data);
-            r.node_list.insert(r.node_list.begin() + 1, std::get<0>(unrouted[best_index]));
+            r.node_list.insert(r.node_list.begin()+1, node);
             r.update(data);
+            // bool st_re_DC = true;
+            // bool smaller_ca = true;
+            // bool earlier_tw = true;
+            // double cost = 0.0;
+            // r.check(data, st_re_DC, smaller_ca, earlier_tw, cost);
+            // if (!st_re_DC || !smaller_ca || !earlier_tw)
+            // {
+            //     printf("");
+            // }
             s.append(r);
         }
         else
         {
-            Route &r = s.get(std::get<1>(unrouted[best_index]));
-            r.node_list.insert(r.node_list.begin() + std::get<2>(unrouted[best_index]), std::get<0>(unrouted[best_index]));
+            Route &r = s.get(best_route_index);
+            r.node_list.insert(r.node_list.begin() + std::get<0>(single_node_pm[best_route_index+1]), node);
             r.update(data);
+            // bool st_re_DC = true;
+            // bool smaller_ca = true;
+            // bool earlier_tw = true;
+            // double cost = 0.0;
+            // r.check(data, st_re_DC, smaller_ca, earlier_tw, cost);
+            // if (!st_re_DC || !smaller_ca || !earlier_tw)
+            // {
+            //     printf("");
+            // }
         }
         // flag inserted node in unrouted
-        std::get<5>(unrouted[best_index]) = true;
-        len--;
+        inserted[best_node_index] = true;
+        unroute_len--;
 
-        // update regret score in unrouted
+        // update regret score in nodes_pm
         // find the changed route
-        int r_index = std::get<1>(unrouted[best_index]);
-        if (r_index == -1) r_index = s.len() - 1;
-        Route &r = s.get(r_index);
+        int changed_r_index = best_route_index;
+        if (changed_r_index == -1) changed_r_index = s.len() - 1;
+        Route &r = s.get(changed_r_index);
         double ori_cost = r.cal_cost(data);
 
-        for (int i = 0; i < int(unrouted.size()); i++)
+        for (int i = 0; i < int(unrouted_nodes.size()); i++)
         {
-            auto &n_t = unrouted[i];
-            if(std::get<5>(n_t)) continue;
+            if(inserted[i]) continue;
+            auto &single_node_pm = nodes_pm[i];
+            int node = unrouted_nodes[i];
+            double ori_cost = r.cal_cost(data);
+            double best_incur_cost = double(INFINITY);
+            int best_pos = -1;
+
             for (int pos = 1; pos < int(r.node_list.size()); pos++)
             {
                 Route tmp_r(data);
                 tmp_r = r;
-                tmp_r.node_list.insert(tmp_r.node_list.begin() + pos, std::get<0>(n_t));
+                tmp_r.node_list.insert(tmp_r.node_list.begin() + pos, node);
                 bool flag = false;
                 double cost = -1.0;
                 chk_route_O_n(tmp_r, data, flag, cost);
                 if (flag)
                 {
                     double incur_cost = cost - ori_cost;
-                    if (incur_cost - std::get<3>(n_t) < -PRECISION)
+                    if (incur_cost - best_incur_cost < -PRECISION)
                     {
-                        std::get<4>(n_t) = std::get<3>(n_t);
-                        std::get<3>(n_t) = incur_cost;
-                        std::get<1>(n_t) = r_index;
-                        std::get<2>(n_t) = pos;
-                    }
-                    else if (incur_cost - std::get<4>(n_t) < -PRECISION)
-                    {
-                        std::get<4>(n_t) = incur_cost;
+                        best_incur_cost = incur_cost;
+                        best_pos = pos;
                     }
                 }
             }
+            std::get<0>(single_node_pm[changed_r_index+1]) = best_pos;
+            std::get<1>(single_node_pm[changed_r_index+1]) = best_incur_cost;
         }
     }
     s.cal_cost(data);
@@ -790,8 +834,18 @@ void apply_move(Solution &s, Move &m, Data data)
     {
         auto &seq = m.seqList_1[i];
         auto &source_n_l = s.get(seq.r_index).node_list;
-        for (int index = seq.start_point; index <= seq.end_point; index++)
-            {target_n_l.push_back(source_n_l[index]);}
+        if (seq.start_point <= seq.end_point)
+        {
+            for (int index = seq.start_point; index <= seq.end_point; index++)
+                {target_n_l.push_back(source_n_l[index]);}
+        }
+        else
+        {
+            for (int index = seq.start_point; index >= seq.end_point; index--)
+            {
+                target_n_l.push_back(source_n_l[index]);
+            }
+        }
     }
 
     // handle the second route
@@ -809,9 +863,19 @@ void apply_move(Solution &s, Move &m, Data data)
                 continue;
             }
             auto &source_n_l = s.get(seq.r_index).node_list;
-            for (int index = seq.start_point; index <= seq.end_point; index++)
+            if (seq.start_point <= seq.end_point)
             {
-                target_n_l_2.push_back(source_n_l[index]);
+                for (int index = seq.start_point; index <= seq.end_point; index++)
+                {
+                    target_n_l_2.push_back(source_n_l[index]);
+                }
+            }
+            else
+            {
+                for (int index = seq.start_point; index >= seq.end_point; index--)
+                {
+                    target_n_l_2.push_back(source_n_l[index]);
+                }
             }
         }
         if (r_indice[1] == -1)
@@ -836,6 +900,20 @@ void apply_move(Solution &s, Move &m, Data data)
     s.local_update(r_indice, data);
 }
 
+void output_move(Move &m)
+{
+    std::cout << "r_indice: " << m.r_indice[0] << m.r_indice[1] << std::endl;
+    std::cout << "len_1: " << m.len_1 << std::endl;
+    for (int i = 0; i < m.len_1; i++)
+    {
+        std::cout << m.seqList_1[i].r_index << m.seqList_1[i].start_point << m.seqList_1[i].end_point << std::endl;
+    }
+    std::cout << "len_2: " << m.len_2 << std::endl;
+    for (int i = 0; i < m.len_2; i++)
+    {
+        std::cout << m.seqList_2[i].r_index << m.seqList_2[i].start_point << m.seqList_2[i].end_point << std::endl;
+    }
+}
 
 void find_local_optima(Solution &s, Data &data)
 {
@@ -845,6 +923,7 @@ void find_local_optima(Solution &s, Data &data)
     for (int i = 0; i < int(move_list.size()); i++)
         {small_opt_map[data.small_opts[i]](s, data, move_list[i]);}
 
+    // double acc_delta_cost = 0;
     while (true)
     {
         int best_index = -1;
@@ -860,7 +939,11 @@ void find_local_optima(Solution &s, Data &data)
         if (min_delta_cost < -PRECISION)
         {
             // apply move
+            // acc_delta_cost += min_delta_cost;
             apply_move(s, move_list[best_index], data);
+            // printf("Acc_delta_cost %f.\nBest move index %d\n", acc_delta_cost, best_index);
+            // if (!s.check(data)) output_move(move_list[best_index]);
+
             // update move_list
             for (int i = 0; i < int(move_list.size()); i++)
                 {small_opt_map[data.small_opts[i]](s, data, move_list[i]);}
@@ -879,6 +962,7 @@ void do_local_search(Solution &s, Data &data)
     find_local_optima(s, data);
     s.cal_cost(data);
     std::cout << "Found local optima. Cost " << s.cost << " " << std::endl;
+    // s.check(data);
 }
 
 void perturb(std::vector<Solution> &s_vector, Data &data)
@@ -890,6 +974,7 @@ void perturb(std::vector<Solution> &s_vector, Data &data)
         {
             destroy_opt_map[data.destroy_opts[i]](s_vector[count], data);
             repair_opt_map[data.repair_opts[i]](s_vector[count], data);
+            // s_vector[count].check(data);
             count++;
         }
     }
