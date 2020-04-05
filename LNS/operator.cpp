@@ -87,7 +87,6 @@ double cal_tc(Route &r, double unrouted_d, double unrouted_p, Data &data)
 double criterion(Route &r, Data &data, int node, int pos, double unrouted_d, double unrouted_p)
 {
     std::vector<int> &nl = r.node_list;
-    double capacity = data.vehicle.capacity;
     // TD
     int pre = nl[pos-1];
     int suc = nl[pos];
@@ -372,7 +371,6 @@ void regret_insertion(Solution &s, Data &data)
             if(inserted[i]) continue;
             auto &single_node_pm = nodes_pm[i];
             int node = unrouted_nodes[i];
-            double ori_cost = r.cal_cost(data);
             double best_incur_cost = double(INFINITY);
             int best_pos = -1;
 
@@ -595,8 +593,8 @@ void two_opt_star(Solution &s, Data &data, Move &m)
                     if ((pos_1 == 1 && pos_2 == 1) || (pos_1 == len_1-1 && pos_2 == len_2-1))
                         continue;
                     if (data.pruning &&
-                        (!data.pm[n_l_1[pos_1-1]][n_l_2[pos_2]]) ||\
-                         !data.pm[n_l_2[pos_2-1]][n_l_1[pos_1]])
+                        (!data.pm[n_l_1[pos_1-1]] [n_l_2[pos_2]] ||\
+                         !data.pm[n_l_2[pos_2-1]][n_l_1[pos_1]]))
                          continue;
                     tmp_move.r_indice[0] = r_index_1;
                     tmp_move.r_indice[1] = r_index_2;
@@ -684,8 +682,8 @@ void or_opt(Solution &s, Data &data, Move &m)
                     for (int pos = 1; pos <= len_2 - 1; pos++)
                     {
                         if (data.pruning &&
-                            (!data.pm[n_l_2[pos-1]][n_l[start]])||\
-                             !data.pm[n_l[end]][n_l_2[pos]])
+                            (!data.pm[n_l_2[pos-1]][n_l[start]]||\
+                             !data.pm[n_l[end]][n_l_2[pos]]))
                              continue;
                         tmp_move.r_indice[0] = r_index;
                         tmp_move.r_indice[1] = r_index_2;
@@ -901,7 +899,7 @@ void apply_move(Solution &s, Move &m, Data data)
     r.node_list = target_n_l;
     r.update(data);
 
-    s.local_update(r_indice, data);
+    s.local_update(r_indice);
 }
 
 void output_move(Move &m)

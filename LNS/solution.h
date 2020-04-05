@@ -262,7 +262,7 @@ public:
         }
     }
 
-    void local_update(std::vector<int> &route_indice, Data &data)
+    void local_update(std::vector<int> &route_indice)
     {
         // delete empty routes in route_indice, and maintain route_list
         // note route_indice would be altered to record all
