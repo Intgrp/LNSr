@@ -2,6 +2,7 @@
 #include <functional>
 #include <map>
 #include <numeric>
+#include <cmath>
 #include "solution.h"
 #include "data.h"
 #include "config.h"

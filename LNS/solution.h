@@ -1,7 +1,6 @@
 #pragma once
 #include <iostream>
 #include <cstdio>
-#include <cstdlib>
 #include <vector>
 #include <unordered_set>
 #include "data.h"

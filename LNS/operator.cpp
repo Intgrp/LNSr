@@ -437,7 +437,6 @@ void new_route_insertion(Solution &s, Data &data, int initial_node)
 
     while (index > 0)
     {
-        std::cout << index << std::endl;
         Route r(data);
         int selected = -1;
         int first_node = -1;
@@ -471,7 +470,7 @@ void new_route_insertion(Solution &s, Data &data, int initial_node)
             int i = 1;
             for (; i < index; i++)
             {
-                if (abs(best_score - score[score_argrank[i]]) < -PRECISION)
+                if (std::abs(best_score - score[score_argrank[i]]) < -PRECISION)
                     ties[i] = score_argrank[i];
                 else
                     break;
