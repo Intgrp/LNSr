@@ -38,6 +38,15 @@ Data::Data(ArgumentParser &parser)
         {
             printf("%s\n", line.c_str());
             this->customer_num = stoi(results[1]) - 1;
+            std::vector<double> tmp_v_1(this->customer_num+1, 0.0);
+            std::vector<bool> tmp_v_2(this->customer_num+1, 0.0);
+            for (int i = 0; i <= this->customer_num; i++)
+            {
+                this->node.push_back({0, 0.0, 0.0, 0.0, 0.0, 0.0});
+                this->dist.push_back(tmp_v_1);
+                this->time.push_back(tmp_v_1);
+                this->pm.push_back(tmp_v_2);
+            }
         }
         else if (results[0] == "VEHICLES")
         {

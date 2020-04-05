@@ -22,24 +22,6 @@ void signalHandler(int signum)
 
 int main(int argc, char **argv)
 {
-    const rlim_t kStackSize = RLIM_INFINITY;
-    struct rlimit rl;
-    int result;
-
-    result = getrlimit(RLIMIT_STACK, &rl);
-    if (result == 0)
-    {
-        if (rl.rlim_cur < kStackSize)
-        {
-            rl.rlim_cur = kStackSize;
-            result = setrlimit(RLIMIT_STACK, &rl);
-            if (result != 0)
-            {
-                fprintf(stderr, "setrlimit returned result = %d\n", result);
-            }
-        }
-    }
-
     best_s.cost = double(INFINITY);
     signal(SIGINT, signalHandler);
     signal(SIGTERM, signalHandler);

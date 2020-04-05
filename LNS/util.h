@@ -73,6 +73,15 @@ static inline void argsort(double b[], int a[], int len)
     std::sort(a, a + len, [&b](int x, int y) { return b[x] < b[y]; });
 }
 
+static inline void argsort(std::vector<double> &b, std::vector<int> &a, int len)
+{
+    for (int i = 0; i < len; i++)
+    {
+        a[i] = i;
+    }
+    std::sort(a.begin(), a.begin() + len, [&b](int x, int y) { return b[x] < b[y]; });
+}
+
 static inline int randint(int from, int end, std::mt19937 &rng)
 {
     std::uniform_int_distribution<int> distr(from, end);

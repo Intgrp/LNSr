@@ -31,11 +31,11 @@ class Data
 public:
     // problem definitions
     std::string problem_name;
-    Point node[MAX_POINT];
+    std::vector<Point> node;
     int customer_num; // shouldn't be larger than MAX_POINT
-    double dist[MAX_POINT][MAX_POINT];
-    double time[MAX_POINT][MAX_POINT];
-    bool pm[MAX_POINT][MAX_POINT]; // pruning matrix
+    std::vector<std::vector<double>> dist;
+    std::vector<std::vector<double>> time;
+    std::vector<std::vector<bool>> pm;
 
     Vehicle vehicle;
     double max_dist = 0; // max value in dist

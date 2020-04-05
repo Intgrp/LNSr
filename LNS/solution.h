@@ -39,11 +39,14 @@ class Route
 public:
     std::vector<int> node_list;
     double dep_time, ret_time, transcost;
-    Attr attr[MAX_NODE_IN_ROUTE][MAX_NODE_IN_ROUTE];
+    std::vector<std::vector<Attr>> attr;
     Attr self;
 
     Route(Data &data)
     {
+        std::vector<Attr> tmp_v(MAX_NODE_IN_ROUTE, {0, 0.0, 0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0});
+        for (int i = 0; i < MAX_NODE_IN_ROUTE; i++)
+            this->attr.push_back(tmp_v);
         this->node_list.reserve(MAX_NODE_IN_ROUTE);
         this->node_list.push_back(data.DC);
         this->node_list.push_back(data.DC);

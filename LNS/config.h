@@ -9,7 +9,7 @@ const int MAX_POP_SIZE = 500;
 const int DEFAULT_SEED = 42;
 
 const int INF = INT_MAX;
-const int N = 419420160; //buffer size for raading problem, 45MB = 30 * 9102 * 1024 char
+const int N = 8192; //buffer size for raading problem
 const int NO_LIMIT = -1; // default time limit
 const int RUNS = 10; //default max restart times
 const double PRECISION = 0.001; // difference smaller than this is considered the same

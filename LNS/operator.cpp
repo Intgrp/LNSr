@@ -34,11 +34,11 @@ double cal_tc(Route &r, double unrouted_d, double unrouted_p, Data &data)
     double rpt = 0.0;
     double route_d = 0.0;
     double route_p = 0.0;
-    double rd[MAX_NODE_IN_ROUTE];
-    double rp[MAX_NODE_IN_ROUTE];
-    double load[MAX_NODE_IN_ROUTE];
-    double cd[MAX_NODE_IN_ROUTE];
-    double cp[MAX_NODE_IN_ROUTE];
+    std::vector<double> rd(nl.size());
+    std::vector<double> rp(nl.size());
+    std::vector<double> load(nl.size());
+    std::vector<double> cd(nl.size());
+    std::vector<double> cp(nl.size());
 
     for (int i = 1; i < len; i++)
     {
@@ -110,7 +110,7 @@ double criterion(Route &r, Data &data, int node, int pos, double unrouted_d, dou
     return rcrs;
 }
 
-bool cal_score(bool feasible_pos[][MAX_NODE_IN_ROUTE], std::vector<std::tuple<int, int>> &unrouted, double *score, int index, Route &r, double unrouted_d, double unrouted_p, Data &data)
+bool cal_score(std::vector<std::vector<bool>> &feasible_pos, std::vector<std::tuple<int, int>> &unrouted, std::vector<double> &score, int index, Route &r, double unrouted_d, double unrouted_p, Data &data)
 {
     /* calculate insertion criterion for each node in unrouted, return
     false if no feasible insertion exists */
@@ -403,10 +403,14 @@ void regret_insertion(Solution &s, Data &data)
 
 void new_route_insertion(Solution &s, Data &data, int initial_node)
 {
-    double score[MAX_POINT];
-    int score_argrank[MAX_POINT];
-    int ties[MAX_POINT];
-    bool feasible_pos[MAX_POINT][MAX_NODE_IN_ROUTE];
+    std::vector<double> score(MAX_POINT);
+    std::vector<int> score_argrank(MAX_POINT);
+    std::vector<int> ties(MAX_POINT);
+    std::vector<bool> tmp_v(MAX_NODE_IN_ROUTE, false);
+    std::vector<std::vector<bool>> feasible_pos;
+    for (int i = 0; i < MAX_POINT; i++)
+        feasible_pos.push_back(tmp_v);
+
     double unrouted_d = data.all_delivery;
     double unrouted_p = data.all_pickup;
 
