@@ -437,6 +437,7 @@ void new_route_insertion(Solution &s, Data &data, int initial_node)
 
     while (index > 0)
     {
+        std::cout << index << std::endl;
         Route r(data);
         int selected = -1;
         int first_node = -1;
