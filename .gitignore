@@ -261,7 +261,7 @@ __pycache__/
 *.pyc
 
 # user specific
-LNS\LNS.vcxproj.filters
-LNS\LNS.vcxproj
 .vscode/settings.json
 LNS.sln
+LNS/LNS.vcxproj
+LNS/LNS.vcxproj.filters
