@@ -9,6 +9,7 @@ Generate VRPSPDTW benchmarks based on jdata instances
 """
 import random as rd
 import sys
+import os
 import pandas as pd
 
 def mintosec(min_str):
@@ -20,15 +21,15 @@ def mintosec(min_str):
     return (hour-8)*60.0 + minute
 
 def generate(cus, ins, base):
-    vehicle_base_file = "examples/data/input_vehicle_type.csv"
-    node_base_file = "examples/data/inputnode_%d.csv" % (base+1)
-    edge_base_file = "examples/data/inputdistancetime_%d.csv" % (base+1)
+    vehicle_base_file = "instances/jd_data/input_vehicle_type.csv"
+    node_base_file = "instances/jd_data/inputnode_%d.csv" % (base+1)
+    edge_base_file = "instances/jd_data/inputdistancetime_%d.csv" % (base+1)
     vehicle_df = pd.read_csv(vehicle_base_file)
     node_df = pd.read_csv(node_base_file)
     edge_df = pd.read_csv(edge_base_file)
 
     for i in range(ins):
-        f = open('examples/%d_%d.vrpsdptw' % (cus, i+1), 'w+')
+        f = open('instances/Liu_Tang_Yao/%d_%d.vrpsdptw' % (cus, i+1), 'w+')
         f.write("NAME : %d_%d\n" % (cus, i+1))
         f.write("TYPE : VRPSDPTW\n")
         f.write("DIMENSION : %d\n" % (cus+1))
@@ -97,6 +98,7 @@ def generate(cus, ins, base):
         f.close()
 
 if __name__ == "__main__":
+    os.chdir('../../')
     # ./generate_benchmark 1200 5
     cus_num = int(sys.argv[1])
     ins_num = int(sys.argv[2])
