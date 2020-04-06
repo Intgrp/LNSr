@@ -186,7 +186,7 @@ Data::Data(ArgumentParser &parser)
     printf("ksize: %d\n", this->ksize);
 
     if (parser.exists("init"))
-        this->init = std::stoi(parser.retrieve<std::string>("init"));
+        this->init = parser.retrieve<std::string>("init");
     printf("Insertion for initialization: %s\n", this->init.c_str());
 
     if (parser.exists("O_1_eval"))
