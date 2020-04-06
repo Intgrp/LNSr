@@ -54,9 +54,9 @@ def test():
                             (solver, ins, config[0], config[1], config[2], config[3], config[4],
                              config[5], t, runs, out_file)
                     print(cmd)
-                    # processSet.add(subprocess.Popen(cmd, shell=True))
-                    pid = subprocess.Popen(cmd, shell=True)
-                    pid.communicate()
+                    processSet.add(subprocess.Popen(cmd, shell=True))
+                    # pid = subprocess.Popen(cmd, shell=True)
+                    # pid.communicate()
                     runningTask = len(processSet)
                     break
 
