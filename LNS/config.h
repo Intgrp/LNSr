@@ -28,8 +28,8 @@ const int DEFAUTL_EX_LEN = 2;
 
 /* large neighborhood opts */
 const int DEFAULT_ELO = 1;
-const double DEFAULT_DESTROY_RATIO_L = 0.05;
-const double DEFAULT_DESTROY_RATIO_U = 0.2;
+const double DEFAULT_DESTROY_RATIO_L = 0.1;
+const double DEFAULT_DESTROY_RATIO_U = 0.3;
 const bool DEFAULT_RD_REMOVAL = false;
 const bool DEFAULT_RT_REMOVAL = false;
 const bool DEFAULT_GD_INSERTION = false;

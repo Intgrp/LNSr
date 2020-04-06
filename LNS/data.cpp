@@ -217,6 +217,7 @@ Data::Data(ArgumentParser &parser)
     {
         printf("or-opt: on\n");
         this->or_opt = true;
+        this->or_opt_len = std::stoi(parser.retrieve<std::string>("or_opt"));
     }
     else
         printf("or-opt: off\n");
@@ -225,6 +226,7 @@ Data::Data(ArgumentParser &parser)
     {
         printf("2-exchange: on\n");
         this->two_exchange = true;
+        this->exchange_len = std::stoi(parser.retrieve<std::string>("two_exchange"));
     }
     else
         printf("2-exchange: off\n");
