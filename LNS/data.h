@@ -56,6 +56,7 @@ public:
     int runs = RUNS; // restarts MA for runs times
     int ksize = K; //the number of generated solutions for producing a solution
     int seed = DEFAULT_SEED; // random seed to initialize rng
+    double bks = -1.0; // best known solution
     std::mt19937 rng; // random number generator
     std::string init = DEFAULT_INIT; // initialization method
     std::tuple<double, double> lambda_gamma = std::make_tuple(0.0,0.0); // params of RCRS method

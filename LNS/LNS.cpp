@@ -9,20 +9,33 @@ by Shengcai Liu
 #include "lns.h"
 
 Solution best_s;
+clock_t find_best_time;
+clock_t find_bks_time;
+bool find_better;
 
 void signalHandler(int signum)
 {
     std::cout << "Interrupt signal (" << signum << ") received.\n";
-    if (abs(best_s.cost - double(INFINITY)) < PRECISION)
+    if (std::abs(best_s.cost - double(INFINITY)) < PRECISION)
         std::cout << "Not found any feasible solution yet.\n";
     else
+    {
         std::cout << best_s.build_output_str();
+        std::cout << "Time to find this solution: " << find_best_time <<"\n";
+        if (find_better)
+            std::cout << "Better than BKS. ";
+        else
+            std::cout << "Worse than BKS. ";
+        std::cout << "Time to surpass BKS: " << find_bks_time <<"\n";
+    }
     exit(signum);
 }
 
 int main(int argc, char **argv)
 {
     best_s.cost = double(INFINITY);
+    find_best_time = find_bks_time = 0;
+    find_better = false;
     signal(SIGINT, signalHandler);
     signal(SIGTERM, signalHandler);
     ArgumentParser parser;
@@ -46,6 +59,7 @@ int main(int argc, char **argv)
     parser.addArgument("--related_removal");
     parser.addArgument("--regret_insertion");
     parser.addArgument("--greedy_insertion");
+    parser.addArgument("--bks", 1);
 
     parser.addArgument("--random_seed", 1);
 

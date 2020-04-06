@@ -1,11 +1,21 @@
 #include "search_framework.h"
 
-void update_best_solution(Solution &s, Solution &best_s)
+extern clock_t find_best_time;
+extern clock_t find_bks_time;
+extern bool find_better;
+
+void update_best_solution(Solution &s, Solution &best_s, clock_t used, Data &data)
 {
     if (s.cost - best_s.cost < -PRECISION)
     {
         best_s = s;
         printf("Best solution update: %.4f\n", best_s.cost);
+        find_best_time = used;
+        if (!find_better && best_s.cost - data.bks < -PRECISION)
+            {
+                find_better = true;
+                find_bks_time = used;
+            }
     }
 }
 
@@ -25,8 +35,8 @@ void search_framework(Data &data, Solution &best_s)
         initialization(s, data);
         // do local search
         do_local_search(s, data);
-        update_best_solution(s, best_s);
         used = (clock() - stime) / CLOCKS_PER_SEC;
+        update_best_solution(s, best_s, used, data);
         if (data.tmax != NO_LIMIT && used > clock_t(data.tmax))
         {
             time_exhausted = true;
@@ -51,12 +61,14 @@ void search_framework(Data &data, Solution &best_s)
                     best_cost = s_vector[i].cost;
                 }
             }
+            used = (clock() - stime) / CLOCKS_PER_SEC;
+
             if (s_vector[best_index].cost - s.cost < - PRECISION)
             {
                 s = s_vector[best_index];
                 printf("Found improvement. Cost %.4f\n", s.cost);
                 no_improve = 0;
-                update_best_solution(s_vector[best_index], best_s);
+                update_best_solution(s_vector[best_index], best_s, used, data);
             }
             else
             {

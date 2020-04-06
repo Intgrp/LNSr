@@ -282,6 +282,9 @@ Data::Data(ArgumentParser &parser)
     if (this->greedy_insertion)
         repair_opts.push_back("greedy_insertion");
 
+    if (parser.exists("bks"))
+        this->bks = std::stod(parser.retrieve<std::string>("bks"));
+
     if (parser.exists("random_seed"))
         this->seed = std::stoi(parser.retrieve<std::string>("random_seed"));
     this->rng.seed(this->seed);
