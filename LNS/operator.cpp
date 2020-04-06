@@ -201,7 +201,9 @@ void regret_insertion(Solution &s, Data &data)
     std::vector<std::tuple<int, double>> single_node_pm(s.len() + 1);
     single_node_pm.reserve(data.vehicle.max_num);
 
-    std::vector<std::vector<std::tuple<int, double>>> nodes_pm(unroute_len, single_node_pm);
+    std::vector<std::vector<std::tuple<int, double>>> nodes_pm;
+    for (int i = 0; i < unroute_len; i++)
+        nodes_pm.push_back(single_node_pm);
 
     for (int i = 0; i < unroute_len; i++)
     {
