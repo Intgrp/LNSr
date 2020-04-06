@@ -20,7 +20,7 @@ tmax = {5   :  5,
 grids = list(product(ksize_list, init_list, or_opt_list, two_exchange_list, elo_list, seeds))
 
 def config_str(config, t):
-    return "ksize=%d_init=%s_or-len=%d_ex-len=%d_elo=%d_seed=%d_t=%d" &\
+    return "ksize=%d_init=%s_or-len=%d_ex-len=%d_elo=%d_seed=%d_t=%d" %\
            (config[0], config[1], config[2], config[3], config[4], config[5], t)
 
 def test():
