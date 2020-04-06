@@ -26,7 +26,7 @@ def config_str(config, t):
 def test():
     solver = "LNSr/LNS/bin/LNS"
     insts = glob("instances/Wang_Chen/explicit_*.vrpsdptw")
-    maxParalism = 10
+    maxParalism = 36
 
     runningTask = 0
     processSet = set()
@@ -45,7 +45,7 @@ def test():
                 else:
                     ins_id = ins[ins.rfind('_')+1:ins.find('.')]
                     with open(ins, 'r') as f:
-                        t = tmax[int(f.read().strip().split('\n')[2].split(':')[1].strip())]
+                        t = tmax[int(f.read().strip().split('\n')[2].split(':')[1].strip())-1]
                     out_file = "results/%s_%s" % (ins_id, config_str(config, t))
                     cmd = ("%s --problem %s --pruning --O_1_eval --two_opt --two_opt_star "
                            "--ksize %d --init %s "
