@@ -197,17 +197,21 @@ void regret_insertion(Solution &s, Data &data)
     int unroute_len = int(unrouted_nodes.size());
     std::vector<bool> inserted(unroute_len, false);
     // <pos, best incur_cost in the route>
-    // single_node_pm[0] is the incured cost of inserting into new route
-    std::vector<std::tuple<int, double>> single_node_pm(s.len() + 1);
-    single_node_pm.reserve(data.vehicle.max_num);
+    std::vector<int> single_node_pm_pos(s.len() + 1);
+    std::vector<double> single_node_pm_cost(s.len() + 1);
 
-    std::vector<std::vector<std::tuple<int, double>>> nodes_pm;
+    std::vector<std::vector<int>> nodes_pm_pos;
+    std::vector<std::vector<double>> nodes_pm_cost;
     for (int i = 0; i < unroute_len; i++)
-        nodes_pm.push_back(single_node_pm);
+    {
+        nodes_pm_pos.push_back(single_node_pm_pos);
+        nodes_pm_cost.push_back(single_node_pm_cost);
+    }
 
     for (int i = 0; i < unroute_len; i++)
     {
-        auto &single_node_pm = nodes_pm[i];
+        auto &single_node_pm_pos = nodes_pm_pos[i];
+        auto &single_node_pm_cost = nodes_pm_cost[i];
         int node = unrouted_nodes[i];
 
         // build a new route with node {DC, node, DC}
@@ -225,8 +229,8 @@ void regret_insertion(Solution &s, Data &data)
             }
             exit(-1);
         }
-        std::get<0>(single_node_pm[0]) = 1;
-        std::get<1>(single_node_pm[0]) = cost;
+        single_node_pm_pos[0] = 1;
+        single_node_pm_cost[0] = cost;
 
         // insert into existing routes, one by one
         for (int r_index = 0; r_index < s.len(); r_index++)
@@ -253,8 +257,8 @@ void regret_insertion(Solution &s, Data &data)
                     }
                 }
             }
-            std::get<0>(single_node_pm[r_index+1]) = best_pos;
-            std::get<1>(single_node_pm[r_index+1]) = best_incur_cost;
+            single_node_pm_pos[r_index+1] = best_pos;
+            single_node_pm_cost[r_index+1] = best_incur_cost;
         }
     }
 
@@ -268,22 +272,23 @@ void regret_insertion(Solution &s, Data &data)
         {
             if (inserted[i])
                 continue;
-            auto &single_node_pm = nodes_pm[i];
+            auto &single_node_pm_pos = nodes_pm_pos[i];
+            auto &single_node_pm_cost = nodes_pm_cost[i];
             // find the best and the second best insertion cost in single_node_pm
-            double best_incur_cost = std::get<1>(single_node_pm[0]);
+            double best_incur_cost = single_node_pm_cost[0];
             int best_r = -1;
             double second_incur_cost = double(INFINITY);
             for (int r_index = 0; r_index < s.len(); r_index++)
             {
-                if (std::get<1>(single_node_pm[r_index+1]) - best_incur_cost < -PRECISION)
+                if (single_node_pm_cost[r_index+1] - best_incur_cost < -PRECISION)
                 {
                     second_incur_cost = best_incur_cost;
-                    best_incur_cost = std::get<1>(single_node_pm[r_index+1]);
+                    best_incur_cost = single_node_pm_cost[r_index+1];
                     best_r = r_index;
                 }
-                else if (std::get<1>(single_node_pm[r_index+1]) - second_incur_cost < -PRECISION)
+                else if (single_node_pm_cost[r_index+1] - second_incur_cost < -PRECISION)
                 {
-                    second_incur_cost = std::get<1>(single_node_pm[r_index+1]);
+                    second_incur_cost = single_node_pm_cost[r_index+1];
                 }
             }
             // second_incur_cost = INFINITY, no feasible insertion into s
@@ -312,17 +317,19 @@ void regret_insertion(Solution &s, Data &data)
             {
                 if (inserted[i])
                     continue;
-                auto &single_node_pm = nodes_pm[i];
-                if (std::get<1>(single_node_pm[0]) - max_regret < -PRECISION)
+                auto &single_node_pm_pos = nodes_pm_pos[i];
+                auto &single_node_pm_cost = nodes_pm_cost[i];
+                if (single_node_pm_cost[0] - max_regret < -PRECISION)
                 {
-                    max_regret = std::get<1>(single_node_pm[0]);
+                    max_regret = single_node_pm_cost[0];
                     best_node_index = i;
                     best_route_index = -1;
                 }
             }
         }
         // insert
-        auto &single_node_pm = nodes_pm[best_node_index];
+        auto &single_node_pm_pos = nodes_pm_pos[best_node_index];
+        auto &single_node_pm_cost = nodes_pm_cost[best_node_index];
         int node = unrouted_nodes[best_node_index];
 
         if (best_route_index == -1)
@@ -345,7 +352,7 @@ void regret_insertion(Solution &s, Data &data)
         else
         {
             Route &r = s.get(best_route_index);
-            r.node_list.insert(r.node_list.begin() + std::get<0>(single_node_pm[best_route_index+1]), node);
+            r.node_list.insert(r.node_list.begin() + single_node_pm_pos[best_route_index+1], node);
             r.update(data);
             // bool st_re_DC = true;
             // bool smaller_ca = true;
@@ -371,7 +378,8 @@ void regret_insertion(Solution &s, Data &data)
         for (int i = 0; i < int(unrouted_nodes.size()); i++)
         {
             if(inserted[i]) continue;
-            auto &single_node_pm = nodes_pm[i];
+            auto &single_node_pm_pos = nodes_pm_pos[i];
+            auto &single_node_pm_cost = nodes_pm_cost[i];
             int node = unrouted_nodes[i];
             double best_incur_cost = double(INFINITY);
             int best_pos = -1;
@@ -394,8 +402,8 @@ void regret_insertion(Solution &s, Data &data)
                     }
                 }
             }
-            std::get<0>(single_node_pm[changed_r_index+1]) = best_pos;
-            std::get<1>(single_node_pm[changed_r_index+1]) = best_incur_cost;
+            single_node_pm_pos[changed_r_index+1] = best_pos;
+            single_node_pm_cost[changed_r_index+1] = best_incur_cost;
         }
     }
     s.cal_cost(data);
