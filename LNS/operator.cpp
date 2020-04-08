@@ -107,7 +107,7 @@ double criterion(Route &r, Data &data, int node, int pos, double unrouted_d, dou
     return rcrs;
 }
 
-bool cal_score(std::vector<std::vector<bool>> &feasible_pos, std::vector<std::tuple<int, int>> &unrouted, std::vector<double> &score, int index, Route &r, double unrouted_d, double unrouted_p, Data &data)
+bool cal_score(std::vector<bool> &feasible_pos, std::vector<std::tuple<int, int>> &unrouted, std::vector<double> &score, int index, Route &r, double unrouted_d, double unrouted_p, Data &data)
 {
     /* calculate insertion criterion for each node in unrouted, return
     false if no feasible insertion exists */
@@ -123,10 +123,10 @@ bool cal_score(std::vector<std::vector<bool>> &feasible_pos, std::vector<std::tu
             bool flag = false;
             double cost = -1.0;
             chk_nl_node_pos_O_n(r.node_list, node, pos, data, flag, cost);
-            if (!flag) feasible_pos[i][pos] = false;
+            if (!flag) feasible_pos[i*MAX_NODE_IN_ROUTE+pos] = false;
             else 
             {
-                feasible_pos[i][pos] = true;
+                feasible_pos[i*MAX_NODE_IN_ROUTE+pos] = true;
                 count++;
             }
         }
@@ -141,7 +141,7 @@ bool cal_score(std::vector<std::vector<bool>> &feasible_pos, std::vector<std::tu
         int best_pos = -1;
         for (int pos = 1; pos < r_len; pos++)
         {
-            if (!feasible_pos[i][pos]) continue;
+            if (!feasible_pos[i*MAX_NODE_IN_ROUTE+pos]) continue;
             double utility = criterion(r, data, node, pos, unrouted_d,\
                                        unrouted_p);
             if (utility - best_score < -PRECISION)
@@ -192,8 +192,8 @@ void regret_insertion(Solution &s, Data &data)
     int unroute_len = int(unrouted_nodes.size());
     std::vector<bool> inserted(unroute_len, false);
     // <pos, best incur_cost in the route>
-    std::vector<int> single_node_pm_pos(s.len() + 1);
-    std::vector<double> single_node_pm_cost(s.len() + 1);
+    std::vector<int> single_node_pm_pos(data.vehicle.max_num);
+    std::vector<double> single_node_pm_cost(data.vehicle.max_num);
 
     std::vector<std::vector<int>> nodes_pm_pos;
     std::vector<std::vector<double>> nodes_pm_cost;
@@ -210,7 +210,7 @@ void regret_insertion(Solution &s, Data &data)
         int node = unrouted_nodes[i];
 
         // build a new route with node {DC, node, DC}
-		std::vector<int> tmp_nl = make_tmp_nl(data);
+        std::vector<int> tmp_nl = make_tmp_nl(data);
         bool flag = false;
         double cost = -1.0;
         chk_nl_node_pos_O_n(tmp_nl, node, 1, data, flag, cost);
@@ -402,10 +402,7 @@ void new_route_insertion(Solution &s, Data &data, int initial_node)
     std::vector<double> score(MAX_POINT);
     std::vector<int> score_argrank(MAX_POINT);
     std::vector<int> ties(MAX_POINT);
-    std::vector<bool> tmp_v(MAX_NODE_IN_ROUTE, false);
-    std::vector<std::vector<bool>> feasible_pos;
-    for (int i = 0; i < MAX_POINT; i++)
-        feasible_pos.push_back(tmp_v);
+    std::vector<bool> feasible_pos(MAX_NODE_IN_ROUTE*MAX_POINT, false);
 
     double unrouted_d = data.all_delivery;
     double unrouted_p = data.all_pickup;

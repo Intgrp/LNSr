@@ -3,7 +3,7 @@
 
 // The following definitions might need to be changed
 // for different problems
-const int MAX_POINT = 2000;
+const int MAX_POINT = 1250;
 const int MAX_NODE_IN_ROUTE = 100;
 const int DEFAULT_SEED = 42;
 

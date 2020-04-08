@@ -103,9 +103,9 @@ void chk_route_O_n(Route &r, Data &data, bool &flag, double &cost)
 
 bool eval_route(Solution &s, Seq *seqList, int seqListLen, Attr &tmp_attr, Data &data)
 {
-    const Attr &attr_1 = seqList[0].r_index == -1 ? attr_for_one_node(data, seqList[0].start_point) : s.get(seqList[0].r_index).attr[seqList[0].start_point][seqList[0].end_point];
+    const Attr &attr_1 = seqList[0].r_index == -1 ? attr_for_one_node(data, seqList[0].start_point) : s.get(seqList[0].r_index).gat(seqList[0].start_point, seqList[0].end_point);
 
-    const Attr &attr_2 = seqList[1].r_index == -1 ? attr_for_one_node(data, seqList[1].start_point) : s.get(seqList[1].r_index).attr[seqList[1].start_point][seqList[1].end_point];
+    const Attr &attr_2 = seqList[1].r_index == -1 ? attr_for_one_node(data, seqList[1].start_point) : s.get(seqList[1].r_index).gat(seqList[1].start_point, seqList[1].end_point);
 
     if ((!check_tw(attr_1, attr_2, data)) || (!check_capacity(attr_1, attr_2, data)))
         return false;
@@ -113,7 +113,7 @@ bool eval_route(Solution &s, Seq *seqList, int seqListLen, Attr &tmp_attr, Data 
 
     for (int i = 2; i < seqListLen; i++)
     {
-        const Attr &attr = seqList[i].r_index == -1 ? attr_for_one_node(data, seqList[i].start_point) : s.get(seqList[i].r_index).attr[seqList[i].start_point][seqList[i].end_point];
+        const Attr &attr = seqList[i].r_index == -1 ? attr_for_one_node(data, seqList[i].start_point) : s.get(seqList[i].r_index).gat(seqList[i].start_point, seqList[i].end_point);
 
         if ((!check_tw(tmp_attr, attr, data)) || (!check_capacity(tmp_attr, attr, data)))
             return false;

@@ -60,5 +60,6 @@ int main(int argc, char **argv)
     parser.parse(argc, argv);
     Data data(parser);
     search_framework(data, best_s);
+	std::cin.get();
     return 0;
 }

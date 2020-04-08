@@ -40,14 +40,11 @@ class Route
 public:
     std::vector<int> node_list;
     double dep_time, ret_time, transcost;
-    std::vector<std::vector<Attr>> attr;
+    std::vector<Attr> attr;
     Attr self;
 
-    Route(Data &data)
+    Route(Data &data) : attr(MAX_NODE_IN_ROUTE * MAX_NODE_IN_ROUTE)
     {
-        std::vector<Attr> tmp_v(MAX_NODE_IN_ROUTE, {0, 0.0, 0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0});
-        for (int i = 0; i < MAX_NODE_IN_ROUTE; i++)
-            this->attr.push_back(tmp_v);
         this->node_list.reserve(MAX_NODE_IN_ROUTE);
         this->node_list.push_back(data.DC);
         this->node_list.push_back(data.DC);
@@ -55,9 +52,9 @@ public:
     }
 
     // attribute
-    Attr &get_attr(int i, int j)
+    Attr &gat(int i, int j)
     {
-        return this->attr[i][j];
+        return this->attr[i*MAX_NODE_IN_ROUTE + j];
     }
 
     void cal_attr(Data &data) //calculate complete attr matrix O(n^2)
@@ -66,19 +63,19 @@ public:
         // 1. attribute for each node
         for (int i = 0; i <= end_index; i++)
         {
-            attr_for_one_node(data, node_list[i], this->attr[i][i]);
+            attr_for_one_node(data, node_list[i], gat(i,i));
         }
         // 2. attribute for sub sequence with start point i, and end point j
         for (int i = 0; i < end_index; i++)
         {
             for (int j = i + 1; j <= end_index; j++)
             {
-                connect(attr[i][j-1], attr[j][j], attr[i][j],\
+                connect(gat(i, j-1), gat(j, j), gat(i, j),\
                         data.dist[node_list[j-1]][node_list[j]],\
                         data.time[node_list[j-1]][node_list[j]]);
             }
         }
-        this->self = this->attr[0][end_index];
+        this->self = this->gat(0, end_index);
         // 3. attribute for inverse sub sequence with length 2, need to check TW constraint
         for (int i = end_index - 1; i > 0; i--)
         {
@@ -87,18 +84,18 @@ public:
             {
                 if (!feasible)
                 {
-                    attr[i][j].num_cus = INFEASIBLE;
+                    gat(i, j).num_cus = INFEASIBLE;
                     continue;
                 }
                 // check TW constraint
-                if (attr[i][j+1].T_E + attr[i][j+1].T_D + data.time[node_list[j+1]][node_list[j]] - attr[j][j].T_L > 0)
+                if (gat(i, j+1).T_E + gat(i, j+1).T_D + data.time[node_list[j+1]][node_list[j]] - gat(j, j).T_L > 0)
                 {
-                    attr[i][j].num_cus = INFEASIBLE;
+                    gat(i, j).num_cus = INFEASIBLE;
                     feasible = false;
                 }
                 else
                 {
-                    connect(attr[i][j+1], attr[j][j], attr[i][j],\
+                    connect(gat(i, j+1), gat(j, j), gat(i, j),\
                             data.dist[node_list[j+1]][node_list[j]],
                             data.time[node_list[j+1]][node_list[j]]);
                 }
