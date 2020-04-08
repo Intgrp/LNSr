@@ -958,7 +958,7 @@ void do_local_search(Solution &s, Data &data)
     }
     find_local_optima(s, data);
     s.cal_cost(data);
-    std::cout << "Found local optima. Cost " << s.cost << " " << std::endl;
+    // std::cout << "Found local optima. Cost " << s.cost << " " << std::endl;
     // s.check(data);
 }
 

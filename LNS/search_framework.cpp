@@ -35,6 +35,7 @@ void search_framework(Data &data, Solution &best_s)
         initialization(s, data);
         // do local search
         do_local_search(s, data);
+        printf("Local optima. Cost %.4f\n", s.cost);
         used = (clock() - stime) / CLOCKS_PER_SEC;
         update_best_solution(s, best_s, used, data);
         if (data.tmax != NO_LIMIT && used > clock_t(data.tmax))
