@@ -66,14 +66,15 @@ void search_framework(Data &data, Solution &best_s)
             if (s_vector[best_index].cost - s.cost < - PRECISION)
             {
                 s = s_vector[best_index];
-                printf("Found improvement. Cost %.4f\n", s.cost);
+                printf("Improvement. Cost %.4f\n", s.cost);
                 no_improve = 0;
                 update_best_solution(s_vector[best_index], best_s, used, data);
             }
             else
             {
                 no_improve++;
-                printf("Not found improvement for %d iterations.\n", no_improve);
+                if (no_improve == data.escape_local_optima)
+                    printf("Have Tried %d peturbations, restart.\n", no_improve);
             }
 
             if (data.tmax != NO_LIMIT && used > clock_t(data.tmax))
@@ -82,7 +83,7 @@ void search_framework(Data &data, Solution &best_s)
                 break;
             }
         }
-        printf("Run %d finishes, the best soltuion found in this run and the global best solution are: %.4f %.4f\n", run, s.cost, best_s.cost);
+        printf("Run %d, best s found: %.4f, global best s: %.4f\n", run, s.cost, best_s.cost);
         data.rng.seed(data.seed + run);
         if (time_exhausted) break;
     }
@@ -90,6 +91,8 @@ void search_framework(Data &data, Solution &best_s)
     printf("------------Summary-----------\n");
     printf("Total %d runs, total consumed %d sec\n", run, int(used));
     best_s.output(data);
+    printf("Time to find this solution: %d.\n", int(find_best_time));
+    printf("Time to surpass BKS: %d.\n", int(find_bks_time));
 }
 
 void initialization(Solution &s, Data &data)

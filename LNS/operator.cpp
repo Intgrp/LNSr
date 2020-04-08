@@ -528,7 +528,7 @@ void new_route_insertion(Solution &s, Data &data)
                 best_cost = tmp_s.cost;
             }
             unrouted[selected] = unrouted[index-1-i];
-            printf("Solution %d, Cost %.4f\n", i, tmp_s.cost);
+            // printf("Solution %d, Cost %.4f\n", i, tmp_s.cost);
         }
         s = best_s;
     }
