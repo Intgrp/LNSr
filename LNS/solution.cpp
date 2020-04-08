@@ -87,3 +87,9 @@ void connect(Attr &merged_attr, const Attr &tmp_b, double dist_ij, double t_ij)
     // s and e
     merged_attr.e = tmp_b.e;
 }
+
+std::vector<int> make_tmp_nl(Data &data)
+{
+    std::vector<int> nl(2, data.DC);
+    return nl;
+}

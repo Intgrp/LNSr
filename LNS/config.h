@@ -41,7 +41,7 @@ K is the number of the selected initial customers. The final solution
 is the best one among the K solutions */
 const std::string RCRS = "rcrs"; // RCRS insertion heuristic
 const std::string TD = "td";  // travel-distance based insertion
-const int K = 5; // the number of generated solutions for producing a solution
+const int K = -1; // the number of generated solutions for producing a solution
 const std::string DEFAULT_INIT = RCRS;
 
 // The flags for a sequence status

@@ -32,6 +32,8 @@ Attr connect(const Attr &tmp_a, const Attr &tmp_b, double dist_ij, double t_ij);
 void connect(const Attr &tmp_a, const Attr &tmp_b, Attr &merged_attr, double dist_ij, double t_ij);
 void connect(Attr &merged_attr, const Attr &tmp_b, double dist_ij, double t_ij);
 
+std::vector<int> make_tmp_nl(Data &data);
+
 /* route class definition */
 class Route
 {

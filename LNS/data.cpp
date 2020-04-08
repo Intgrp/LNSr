@@ -183,6 +183,8 @@ Data::Data(ArgumentParser &parser)
 
     if (parser.exists("ksize"))
         this->ksize = std::stoi(parser.retrieve<std::string>("ksize"));
+    if (this->ksize == K)
+        this->ksize = this->customer_num;
     printf("ksize: %d\n", this->ksize);
 
     if (parser.exists("init"))

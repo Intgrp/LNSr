@@ -23,9 +23,8 @@ void maintain_unrouted(int i, int node, int &index, std::vector<std::tuple<int, 
     unrouted_p -= data.node[node].pickup;
 }
 
-double cal_tc(Route &r, double unrouted_d, double unrouted_p, Data &data)
+double cal_tc(std::vector<int> &nl, double unrouted_d, double unrouted_p, Data &data)
 {
-    std::vector<int> &nl = r.node_list;
     int len = int(nl.size());
     double capacity = data.vehicle.capacity;
 
@@ -94,10 +93,9 @@ double criterion(Route &r, Data &data, int node, int pos, double unrouted_d, dou
     if (data.n_insert == TD) return td;
 
     // TC
-    Route tmp_r(data);
-    tmp_r = r;
-    tmp_r.node_list.insert(tmp_r.node_list.begin() + pos, node);
-    double tc = cal_tc(tmp_r, unrouted_d, unrouted_p, data);
+    std::vector<int> tmp_nl = r.node_list;
+    tmp_nl.insert(tmp_nl.begin() + pos, node);
+    double tc = cal_tc(tmp_nl, unrouted_d, unrouted_p, data);
 
     // RS
     double rs = data.dist[data.DC][node] + data.dist[node][data.DC];
@@ -122,12 +120,9 @@ bool cal_score(std::vector<std::vector<bool>> &feasible_pos, std::vector<std::tu
         int node = std::get<0>(unrouted[i]);
         for (int pos = 1; pos < r_len; pos++)
         {
-            Route tmp_r(data);
-            tmp_r = r;
-            tmp_r.node_list.insert(tmp_r.node_list.begin() + pos, node);
             bool flag = false;
             double cost = -1.0;
-            chk_route_O_n(tmp_r, data, flag, cost);
+            chk_nl_node_pos_O_n(r.node_list, node, pos, data, flag, cost);
             if (!flag) feasible_pos[i][pos] = false;
             else 
             {
@@ -215,15 +210,14 @@ void regret_insertion(Solution &s, Data &data)
         int node = unrouted_nodes[i];
 
         // build a new route with node {DC, node, DC}
-        Route tmp_r(data);
-        tmp_r.node_list.insert(tmp_r.node_list.begin() + 1, node);
+		std::vector<int> tmp_nl = make_tmp_nl(data);
         bool flag = false;
         double cost = -1.0;
-        chk_route_O_n(tmp_r, data, flag, cost);
+        chk_nl_node_pos_O_n(tmp_nl, node, 1, data, flag, cost);
         if (!flag)
         {
             printf("Error: Detect not feasible 1-customer route: ");
-            for (auto &node : tmp_r.node_list)
+            for (auto &node : tmp_nl)
             {
                 std::cout << node;
             }
@@ -241,12 +235,9 @@ void regret_insertion(Solution &s, Data &data)
             int best_pos = -1;
             for (int pos = 1; pos < int(r.node_list.size()); pos++)
             {
-                Route tmp_r(data);
-                tmp_r = r;
-                tmp_r.node_list.insert(tmp_r.node_list.begin() + pos, node);
                 bool flag = false;
                 double cost = -1.0;
-                chk_route_O_n(tmp_r, data, flag, cost);
+                chk_nl_node_pos_O_n(r.node_list, node, pos, data, flag, cost);
                 if (flag)
                 {
                     double incur_cost = cost - ori_cost;
@@ -386,12 +377,9 @@ void regret_insertion(Solution &s, Data &data)
 
             for (int pos = 1; pos < int(r.node_list.size()); pos++)
             {
-                Route tmp_r(data);
-                tmp_r = r;
-                tmp_r.node_list.insert(tmp_r.node_list.begin() + pos, node);
                 bool flag = false;
                 double cost = -1.0;
-                chk_route_O_n(tmp_r, data, flag, cost);
+                chk_nl_node_pos_O_n(r.node_list, node, pos, data, flag, cost);
                 if (flag)
                 {
                     double incur_cost = cost - ori_cost;

@@ -1,5 +1,57 @@
 # include "eval.h"
 
+void chk_nl_node_pos_O_n(std::vector<int> &nl, int inserted_node, int pos, Data &data, bool &flag, double &cost)
+{
+    int len = int(nl.size());
+    double capacity = data.vehicle.capacity;
+    double distance = 0.0;
+    double time = data.start_time;
+    double load = 0.0;
+    for (auto node : nl)
+    {
+        load += data.node[node].delivery;
+    }
+    load += data.node[inserted_node].delivery;
+
+    if (load > capacity)
+    {
+        flag = false;
+        return;
+    }
+
+    int pre_node = nl[0];
+    bool checked = false;
+    for (int i = 1; i < len; i++)
+    {
+        int node = nl[i];
+        if (i == pos && !checked)
+        {
+            node = inserted_node;
+            i--;
+            checked = true;
+        }
+
+        load = load - data.node[node].delivery + data.node[node].pickup;
+        if (load > capacity)
+        {
+            flag = false;
+            return;
+        }
+        time += data.time[pre_node][node];
+        if (time > data.node[node].end)
+        {
+            flag = false;
+            return;
+        }
+        time = std::max(time, data.node[node].start) + data.node[node].s_time;
+        distance += data.dist[pre_node][node];
+        pre_node = node;
+    }
+
+    flag = true;
+    cost = data.vehicle.d_cost + distance * data.vehicle.unit_cost;
+}
+
 void chk_route_O_n(Route &r, Data &data, bool &flag, double &cost)
 {
     /* time complexity O(n) */
