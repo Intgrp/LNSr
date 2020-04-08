@@ -26,7 +26,7 @@ def config_str(config, t):
 def test():
     solver = "LNSr/LNS/bin/LNS"
     insts = glob("instances/Wang_Chen/explicit_*.vrpsdptw")
-    maxParalism = 36
+    maxParalism = 14
 
     runningTask = 0
     processSet = set()
