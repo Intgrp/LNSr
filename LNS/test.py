@@ -5,12 +5,12 @@ from itertools import product
 from glob import glob
 
 runs = 1024
-ksize_list = [1, 3, 5, 7, 9]
+ksize_list = [-1]
 init_list = ['rcrs', 'td']
-or_opt_list = [2, 3, 4]
-two_exchange_list = [2, 3]
-elo_list = [1, 2, 3, 4, 5]
-seeds = [0, 42, 64]
+or_opt_list = [5]
+two_exchange_list = [5]
+elo_list = [50]
+seeds = [42]
 tmax = {5   :  5,
         10  : 15,
         50  : 15,

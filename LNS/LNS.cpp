@@ -11,7 +11,9 @@ by Shengcai Liu
 Solution best_s;
 double best_s_cost;
 clock_t find_best_time;
+int find_best_run;
 clock_t find_bks_time;
+int find_bks_run;
 bool find_better;
 
 void signalHandler(int signum)
@@ -28,6 +30,7 @@ int main(int argc, char **argv)
     best_s.cost = double(INFINITY);
     best_s_cost = -1.0;
     find_best_time = find_bks_time = 0;
+    find_best_run = find_bks_run = 0;
     find_better = false;
     signal(SIGINT, signalHandler);
     signal(SIGTERM, signalHandler);

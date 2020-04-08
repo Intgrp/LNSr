@@ -2,19 +2,24 @@
 
 extern clock_t find_best_time;
 extern clock_t find_bks_time;
+extern int find_best_run;
+extern int find_bks_run;
 extern bool find_better;
 
-void update_best_solution(Solution &s, Solution &best_s, clock_t used, Data &data)
+void update_best_solution(Solution &s, Solution &best_s, clock_t used, int run, Data &data)
 {
     if (s.cost - best_s.cost < -PRECISION)
     {
         best_s = s;
         printf("Best solution update: %.4f\n", best_s.cost);
         find_best_time = used;
-        if (!find_better && best_s.cost - data.bks < -PRECISION)
+        find_best_run = run;
+        if (!find_better && (std::abs(best_s.cost - data.bks) < PRECISION ||\
+                             (best_s.cost - data.bks < -PRECISION)))
             {
                 find_better = true;
                 find_bks_time = used;
+                find_bks_run = run;
             }
     }
 }
@@ -37,7 +42,7 @@ void search_framework(Data &data, Solution &best_s)
         do_local_search(s, data);
         printf("Local optima. Cost %.4f\n", s.cost);
         used = (clock() - stime) / CLOCKS_PER_SEC;
-        update_best_solution(s, best_s, used, data);
+        update_best_solution(s, best_s, used, run, data);
         if (data.tmax != NO_LIMIT && used > clock_t(data.tmax))
         {
             time_exhausted = true;
@@ -69,7 +74,7 @@ void search_framework(Data &data, Solution &best_s)
                 s = s_vector[best_index];
                 printf("Improvement. Cost %.4f\n", s.cost);
                 no_improve = 0;
-                update_best_solution(s_vector[best_index], best_s, used, data);
+                update_best_solution(s_vector[best_index], best_s, used, run, data);
             }
             else
             {
