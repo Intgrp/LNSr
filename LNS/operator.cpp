@@ -192,8 +192,8 @@ void regret_insertion(Solution &s, Data &data)
     int unroute_len = int(unrouted_nodes.size());
     std::vector<bool> inserted(unroute_len, false);
     // <pos, best incur_cost in the route>
-    std::vector<int> single_node_pm_pos(data.vehicle.max_num);
-    std::vector<double> single_node_pm_cost(data.vehicle.max_num);
+    std::vector<int> single_node_pm_pos(data.vehicle.max_num+1);
+    std::vector<double> single_node_pm_cost(data.vehicle.max_num+1);
 
     std::vector<std::vector<int>> nodes_pm_pos;
     std::vector<std::vector<double>> nodes_pm_cost;
