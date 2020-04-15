@@ -12,6 +12,8 @@ Data::Data(ArgumentParser &parser)
     std::string line;
     double all_pickup = 0.0;
     double all_delivery = 0.0;
+    double all_dist = 0.0;
+    double all_time = 0.0;
     bool flag = true;
     while (true)
     {
@@ -40,11 +42,14 @@ Data::Data(ArgumentParser &parser)
             this->customer_num = stoi(results[1]) - 1;
             std::vector<double> tmp_v_1(this->customer_num+1, 0.0);
             std::vector<bool> tmp_v_2(this->customer_num+1, 0.0);
+            std::vector<int> tmp_v_3(this->customer_num+1, 0);
             for (int i = 0; i <= this->customer_num; i++)
             {
                 this->node.push_back({0, 0.0, 0.0, 0.0, 0.0, 0.0});
                 this->dist.push_back(tmp_v_1);
                 this->time.push_back(tmp_v_1);
+                this->rm.push_back(tmp_v_1);
+                this->rm_argrank.push_back(tmp_v_3);
                 this->pm.push_back(tmp_v_2);
             }
         }
@@ -128,7 +133,9 @@ Data::Data(ArgumentParser &parser)
                     trim(r[3]);
                     double t = stod(r[3]);
                     this->dist[i][j] = d;
+                    all_dist += d;
                     this->time[i][j] = t;
+                    all_time += t;
                     if (d < this->min_dist) this->min_dist = d;
                     if (d > this->max_dist) this->max_dist = d;
                 }
@@ -249,6 +256,10 @@ Data::Data(ArgumentParser &parser)
     {
         printf("related_removal: on\n");
         this->related_removal = true;
+        if (parser.exists("alpha"))
+            this->alpha = std::stod(parser.retrieve<std::string>("alpha"));
+        this->r = this->alpha * (all_dist / all_time);
+        printf("alpha: %f, relateness norm factor: %f\n", this->alpha, this->r);
     }
     else
         printf("related_removal: off\n");
@@ -306,6 +317,30 @@ Data::Data(ArgumentParser &parser)
 void Data::pre_processing()
 {
     printf("--------------------------------------------\n");
+    if (this->related_removal)
+    {
+        int c_num = this->customer_num;
+        int DC = this->DC;
+        for (int i = 0; i <= c_num; i++)
+        {
+            if (i == DC) continue;
+            for (int j = 0; j <= c_num; j++)
+            {
+                if(j == DC || j == i)
+                    this->rm[i][j] = double(INFINITY);
+                else
+                {
+                    auto &node_i = this->node[i];
+                    auto &node_j = this->node[j];
+                    double tmp_1 = this->r * std::max(node_j.start - node_i.s_time - this->time[i][j] - node_i.end, 0.0);
+                    double tmp_2 = this->r * PENALTY_FACTOR * std::max(node_i.start + node_i.s_time + this->time[i][j] - node_j.end, 0.0);
+					double tmp_3 = this->dist[i][j];
+                    this->rm[i][j] = tmp_3 + tmp_1 + tmp_2;
+                }
+            }
+            argsort(this->rm[i], this->rm_argrank[i], c_num+1);
+        }
+    }
     if (this->pruning)
     {
         printf("Do Pruning\n");

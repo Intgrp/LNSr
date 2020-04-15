@@ -35,6 +35,8 @@ public:
     int customer_num; // shouldn't be larger than MAX_POINT
     std::vector<std::vector<double>> dist;
     std::vector<std::vector<double>> time;
+    std::vector<std::vector<double>> rm;
+    std::vector<std::vector<int>> rm_argrank;
     std::vector<std::vector<bool>> pm;
 
     Vehicle vehicle;
@@ -76,6 +78,8 @@ public:
     bool related_removal = DEFAULT_RT_REMOVAL;
     bool greedy_insertion = DEFAULT_GD_INSERTION;
     bool regret_insertion = DEFAULT_RG_INSERTION;
+    double alpha = DEFAULT_ALPHA;
+    double r = 0.0;
 
     std::vector<std::string> small_opts;
     std::vector<std::string> destroy_opts;

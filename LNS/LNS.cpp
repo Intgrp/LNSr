@@ -53,6 +53,7 @@ int main(int argc, char **argv)
     parser.addArgument("--elo", 1);
     parser.addArgument("--random_removal");
     parser.addArgument("--related_removal");
+    parser.addArgument("--alpha", 1);
     parser.addArgument("--regret_insertion");
     parser.addArgument("--greedy_insertion");
     parser.addArgument("--bks", 1);

@@ -169,41 +169,9 @@ void find_unrouted(Solution &s, std::vector<int> &record)
     }
 }
 
-void greedy_insertion(Solution &s, Data &data)
+void update_nodes_pm_cost(Solution &s, std::vector<std::vector<int>> &nodes_pm_pos, std::vector<std::vector<double>> &nodes_pm_cost, std::vector<int> &unrouted_nodes, Data &data)
 {
-    regret_insertion(s, data);
-}
-
-void regret_insertion(Solution &s, Data &data)
-{
-    int num_cus = data.customer_num;
-    // find all unrouted nodes
-    std::vector<int> record(num_cus + 1, 0);
-    find_unrouted(s, record);
-    std::vector<int> unrouted_nodes;
-    unrouted_nodes.reserve(data.customer_num);
-
-    for (int i = 0; i < num_cus + 1; i++)
-    {
-        if (i == data.DC) continue;
-        if (record[i] == 0)
-            unrouted_nodes.push_back(i);
-    }
-    int unroute_len = int(unrouted_nodes.size());
-    std::vector<bool> inserted(unroute_len, false);
-    // <pos, best incur_cost in the route>
-    std::vector<int> single_node_pm_pos(data.vehicle.max_num+1);
-    std::vector<double> single_node_pm_cost(data.vehicle.max_num+1);
-
-    std::vector<std::vector<int>> nodes_pm_pos;
-    std::vector<std::vector<double>> nodes_pm_cost;
-    for (int i = 0; i < unroute_len; i++)
-    {
-        nodes_pm_pos.push_back(single_node_pm_pos);
-        nodes_pm_cost.push_back(single_node_pm_cost);
-    }
-
-    for (int i = 0; i < unroute_len; i++)
+    for (int i = 0; i < int(unrouted_nodes.size()); i++)
     {
         auto &single_node_pm_pos = nodes_pm_pos[i];
         auto &single_node_pm_cost = nodes_pm_cost[i];
@@ -248,10 +216,176 @@ void regret_insertion(Solution &s, Data &data)
                     }
                 }
             }
-            single_node_pm_pos[r_index+1] = best_pos;
-            single_node_pm_cost[r_index+1] = best_incur_cost;
+            single_node_pm_pos[r_index + 1] = best_pos;
+            single_node_pm_cost[r_index + 1] = best_incur_cost;
         }
     }
+}
+
+void update_single_node_pm_cost(Solution &s, std::vector<std::vector<int>> &nodes_pm_pos, std::vector<std::vector<double>> &nodes_pm_cost, std::vector<int> &unrouted_nodes, int changed_r_index, std::vector<bool> &inserted, Data &data)
+{
+    Route &r = s.get(changed_r_index);
+    double ori_cost = r.cal_cost(data);
+
+    for (int i = 0; i < int(unrouted_nodes.size()); i++)
+    {
+        if (inserted[i])
+            continue;
+        auto &single_node_pm_pos = nodes_pm_pos[i];
+        auto &single_node_pm_cost = nodes_pm_cost[i];
+        int node = unrouted_nodes[i];
+        double best_incur_cost = double(INFINITY);
+        int best_pos = -1;
+
+        for (int pos = 1; pos < int(r.node_list.size()); pos++)
+        {
+            bool flag = false;
+            double cost = -1.0;
+            chk_nl_node_pos_O_n(r.node_list, node, pos, data, flag, cost);
+            if (flag)
+            {
+                double incur_cost = cost - ori_cost;
+                if (incur_cost - best_incur_cost < -PRECISION)
+                {
+                    best_incur_cost = incur_cost;
+                    best_pos = pos;
+                }
+            }
+        }
+        single_node_pm_pos[changed_r_index + 1] = best_pos;
+        single_node_pm_cost[changed_r_index + 1] = best_incur_cost;
+    }
+}
+
+void greedy_insertion(Solution &s, Data &data)
+{
+    int num_cus = data.customer_num;
+    // find all unrouted nodes
+    std::vector<int> record(num_cus + 1, 0);
+    find_unrouted(s, record);
+    std::vector<int> unrouted_nodes;
+    unrouted_nodes.reserve(data.customer_num);
+
+    for (int i = 0; i < num_cus + 1; i++)
+    {
+        if (i == data.DC)
+            continue;
+        if (record[i] == 0)
+            unrouted_nodes.push_back(i);
+    }
+    int unroute_len = int(unrouted_nodes.size());
+    std::vector<bool> inserted(unroute_len, false);
+    // <pos, best incur_cost in the route>
+    std::vector<int> single_node_pm_pos(data.vehicle.max_num + 1);
+    std::vector<double> single_node_pm_cost(data.vehicle.max_num + 1);
+    std::vector<std::vector<int>> nodes_pm_pos;
+    std::vector<std::vector<double>> nodes_pm_cost;
+    for (int i = 0; i < unroute_len; i++)
+    {
+        nodes_pm_pos.push_back(single_node_pm_pos);
+        nodes_pm_cost.push_back(single_node_pm_cost);
+    }
+    update_nodes_pm_cost(s, nodes_pm_pos, nodes_pm_cost, unrouted_nodes, data);
+
+    while (unroute_len > 0)
+    {
+        // find the one with the min insertion cost
+        double min_cost = double(INFINITY);
+        int best_node_index = -1;
+        int best_route_index = -2;
+        for (int i = 0; i < int(unrouted_nodes.size()); i++)
+        {
+            if (inserted[i]) continue;
+            auto &single_node_pm_pos = nodes_pm_pos[i];
+            auto &single_node_pm_cost = nodes_pm_cost[i];
+            // find the best and the second best insertion cost in single_node_pm
+            double best_incur_cost = single_node_pm_cost[0];
+            int best_r = -1;
+            for (int r_index = 0; r_index < s.len(); r_index++)
+            {
+                if (single_node_pm_cost[r_index + 1] - best_incur_cost < -PRECISION)
+                {
+                    best_incur_cost = single_node_pm_cost[r_index + 1];
+                    best_r = r_index;
+                }
+            }
+            // second_incur_cost = INFINITY, no feasible insertion into s
+            // except building a new route. In this case set regret = 0, giving
+            // it the minimum priority for insertion
+            if (best_incur_cost - min_cost < -PRECISION)
+            {
+                min_cost = best_incur_cost;
+                best_node_index = i;
+                best_route_index = best_r;
+            }
+        }
+        if (min_cost == double(INFINITY))
+        {
+            std::cout << "Error: Min insertion cost -INFINITY, this should not happen\n";
+            exit(-1);
+        }
+        // insert
+        auto &single_node_pm_pos = nodes_pm_pos[best_node_index];
+        auto &single_node_pm_cost = nodes_pm_cost[best_node_index];
+        int node = unrouted_nodes[best_node_index];
+
+        if (best_route_index == -1)
+        {
+            // build a new route
+            Route r(data);
+            r.node_list.insert(r.node_list.begin() + 1, node);
+            r.update(data);
+            s.append(r);
+        }
+        else
+        {
+            Route &r = s.get(best_route_index);
+            r.node_list.insert(r.node_list.begin() + single_node_pm_pos[best_route_index + 1], node);
+            r.update(data);
+        }
+        // flag inserted node in unrouted
+        inserted[best_node_index] = true;
+        unroute_len--;
+
+        // update regret score in nodes_pm
+        // find the changed route
+        int changed_r_index = best_route_index;
+        if (changed_r_index == -1)
+            changed_r_index = s.len() - 1;
+        update_single_node_pm_cost(s, nodes_pm_pos, nodes_pm_cost, unrouted_nodes, changed_r_index, inserted, data);
+    }
+    s.cal_cost(data);
+}
+
+void regret_insertion(Solution &s, Data &data)
+{
+    int num_cus = data.customer_num;
+    // find all unrouted nodes
+    std::vector<int> record(num_cus + 1, 0);
+    find_unrouted(s, record);
+    std::vector<int> unrouted_nodes;
+    unrouted_nodes.reserve(data.customer_num);
+
+    for (int i = 0; i < num_cus + 1; i++)
+    {
+        if (i == data.DC) continue;
+        if (record[i] == 0)
+            unrouted_nodes.push_back(i);
+    }
+    int unroute_len = int(unrouted_nodes.size());
+    std::vector<bool> inserted(unroute_len, false);
+    // <pos, best incur_cost in the route>
+    std::vector<int> single_node_pm_pos(data.vehicle.max_num+1);
+    std::vector<double> single_node_pm_cost(data.vehicle.max_num+1);
+
+    std::vector<std::vector<int>> nodes_pm_pos;
+    std::vector<std::vector<double>> nodes_pm_cost;
+    for (int i = 0; i < unroute_len; i++)
+    {
+        nodes_pm_pos.push_back(single_node_pm_pos);
+        nodes_pm_cost.push_back(single_node_pm_cost);
+    }
+    update_nodes_pm_cost(s, nodes_pm_pos, nodes_pm_cost, unrouted_nodes, data);
 
     while (unroute_len > 0)
     {
@@ -329,15 +463,6 @@ void regret_insertion(Solution &s, Data &data)
             Route r(data);
             r.node_list.insert(r.node_list.begin()+1, node);
             r.update(data);
-            // bool st_re_DC = true;
-            // bool smaller_ca = true;
-            // bool earlier_tw = true;
-            // double cost = 0.0;
-            // r.check(data, st_re_DC, smaller_ca, earlier_tw, cost);
-            // if (!st_re_DC || !smaller_ca || !earlier_tw)
-            // {
-            //     printf("");
-            // }
             s.append(r);
         }
         else
@@ -345,15 +470,6 @@ void regret_insertion(Solution &s, Data &data)
             Route &r = s.get(best_route_index);
             r.node_list.insert(r.node_list.begin() + single_node_pm_pos[best_route_index+1], node);
             r.update(data);
-            // bool st_re_DC = true;
-            // bool smaller_ca = true;
-            // bool earlier_tw = true;
-            // double cost = 0.0;
-            // r.check(data, st_re_DC, smaller_ca, earlier_tw, cost);
-            // if (!st_re_DC || !smaller_ca || !earlier_tw)
-            // {
-            //     printf("");
-            // }
         }
         // flag inserted node in unrouted
         inserted[best_node_index] = true;
@@ -363,36 +479,7 @@ void regret_insertion(Solution &s, Data &data)
         // find the changed route
         int changed_r_index = best_route_index;
         if (changed_r_index == -1) changed_r_index = s.len() - 1;
-        Route &r = s.get(changed_r_index);
-        double ori_cost = r.cal_cost(data);
-
-        for (int i = 0; i < int(unrouted_nodes.size()); i++)
-        {
-            if(inserted[i]) continue;
-            auto &single_node_pm_pos = nodes_pm_pos[i];
-            auto &single_node_pm_cost = nodes_pm_cost[i];
-            int node = unrouted_nodes[i];
-            double best_incur_cost = double(INFINITY);
-            int best_pos = -1;
-
-            for (int pos = 1; pos < int(r.node_list.size()); pos++)
-            {
-                bool flag = false;
-                double cost = -1.0;
-                chk_nl_node_pos_O_n(r.node_list, node, pos, data, flag, cost);
-                if (flag)
-                {
-                    double incur_cost = cost - ori_cost;
-                    if (incur_cost - best_incur_cost < -PRECISION)
-                    {
-                        best_incur_cost = incur_cost;
-                        best_pos = pos;
-                    }
-                }
-            }
-            single_node_pm_pos[changed_r_index+1] = best_pos;
-            single_node_pm_cost[changed_r_index+1] = best_incur_cost;
-        }
+        update_single_node_pm_cost(s, nodes_pm_pos, nodes_pm_cost, unrouted_nodes, changed_r_index, inserted, data);
     }
     s.cal_cost(data);
 }
@@ -769,9 +856,69 @@ void two_exchange(Solution &s, Data &data, Move &m)
     }
 }
 
+void removal_from_s(Solution &s, std::vector<int>& flag)
+{
+    int s_len = s.len();
+    for (int r_index = 0; r_index < s_len; r_index++)
+    {
+        Route &r = s.get(r_index);
+        auto &n_l = r.node_list;
+        int len = int(n_l.size());
+        for (int i = 0; i < len; i++)
+        {
+            if (flag[n_l[i]] == 1)
+            {
+                n_l.erase(n_l.begin() + i);
+                i--;
+                len--;
+            }
+        }
+    }
+}
+
 void related_removal(Solution &s, Data &data)
 {
-    random_removal(s, data);
+    int selected = randint(0, data.customer_num, data.rng);
+    while(selected == data.DC)
+        selected = randint(0, data.customer_num, data.rng);
+    std::vector<int> flag(data.customer_num+1, 0);
+    std::vector<int> selected_cus;
+    selected_cus.reserve(data.customer_num);
+    flag[selected] = 1;
+    selected_cus.push_back(selected);
+    int total_remove = round(data.customer_num * \
+                             rand(data.destroy_ratio_l, data.destroy_ratio_u, data.rng));
+    int already_remove = 1;
+    while (already_remove < total_remove)
+    {
+        int ref_cus = selected_cus[randint(0, int(selected_cus.size())-1, data.rng)];
+        auto &argrank = data.rm_argrank[ref_cus];
+        std::vector<int> best_two;
+        best_two.reserve(2);
+        for (int i = 0; i < data.customer_num - 1; i++)
+        {
+            if (flag[argrank[i]] == 1) continue;
+            best_two.push_back(argrank[i]);
+            if (int(best_two.size())== 2) break;
+        }
+        if (int(best_two.size()) != 2)
+        {
+            printf("Cound not find not 2 inserted customers in related removal\n");
+            exit(-1);
+        }
+        // roulette selection
+        int selected = -1;
+        double prob = data.rm[ref_cus][best_two[1]] / (data.rm[ref_cus][best_two[0]] + data.rm[ref_cus][best_two[1]]);
+        if (rand(0, 1, data.rng) < prob)
+            selected = best_two[0];
+        else
+            selected = best_two[1];
+        flag[selected] = 1;
+        selected_cus.push_back(selected);
+        already_remove ++;
+    }
+    removal_from_s(s, flag);
+    s.update(data);
 }
 
 void random_removal(Solution &s, Data &data)
@@ -790,23 +937,7 @@ void random_removal(Solution &s, Data &data)
     int boundray = int(round(double(data.customer_num) *\
                        rand(data.destroy_ratio_l, data.destroy_ratio_u, data.rng)));
     for (int i = 0; i < boundray + 1; i++) {indice[customers[i]] = 1;}
-
-    int s_len = s.len();
-    for (int r_index = 0; r_index < s_len; r_index++)
-    {
-        Route &r = s.get(r_index);
-        auto &n_l = r.node_list;
-        int len = int(n_l.size());
-        for (int i = 0; i < len; i++)
-        {
-            if (indice[n_l[i]] == 1)
-            {
-                n_l.erase(n_l.begin()+i);
-                i--;
-                len--;
-            }
-        }
-    }
+    removal_from_s(s, indice);
     s.update(data);
 }
 
@@ -970,7 +1101,7 @@ void perturb(std::vector<Solution> &s_vector, Data &data)
         for (int j = 0; j < int(data.repair_opts.size()); j++)
         {
             destroy_opt_map[data.destroy_opts[i]](s_vector[count], data);
-            repair_opt_map[data.repair_opts[i]](s_vector[count], data);
+            repair_opt_map[data.repair_opts[j]](s_vector[count], data);
             // s_vector[count].check(data);
             count++;
         }

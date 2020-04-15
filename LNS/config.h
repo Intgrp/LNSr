@@ -28,8 +28,8 @@ const int DEFAUTL_EX_LEN = 2;
 
 /* large neighborhood opts */
 const int DEFAULT_ELO = 1;
-const double DEFAULT_DESTROY_RATIO_L = 0.1;
-const double DEFAULT_DESTROY_RATIO_U = 0.3;
+const double DEFAULT_DESTROY_RATIO_L = 0.2;
+const double DEFAULT_DESTROY_RATIO_U = 0.4;
 const bool DEFAULT_RD_REMOVAL = false;
 const bool DEFAULT_RT_REMOVAL = false;
 const bool DEFAULT_GD_INSERTION = false;
@@ -43,6 +43,10 @@ const std::string RCRS = "rcrs"; // RCRS insertion heuristic
 const std::string TD = "td";  // travel-distance based insertion
 const int K = -1; // the number of generated solutions for producing a solution
 const std::string DEFAULT_INIT = RCRS;
+
+/* removal and insertion */
+const double DEFAULT_ALPHA = 1.0; // relatedness para
+const double PENALTY_FACTOR = 10.0; // penalty factor for tw constraint
 
 // The flags for a sequence status
 const int INFEASIBLE = -1;
