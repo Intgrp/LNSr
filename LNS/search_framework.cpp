@@ -109,7 +109,7 @@ void initialization(Solution &s, Data &data, int run)
         data.n_insert = RCRS;
         if (int(data.latin.size()) > 0)
         {
-            data.lambda_gamma = data.latin[run];
+            data.lambda_gamma = data.latin[run % (LATIN_NUM * LATIN_NUM)];
         }
         else
         {
