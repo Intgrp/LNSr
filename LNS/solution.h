@@ -34,6 +34,8 @@ void connect(Attr &merged_attr, const Attr &tmp_b, double dist_ij, double t_ij);
 
 std::vector<int> make_tmp_nl(Data &data);
 
+bool equal_attr(const Attr &a, const Attr &b);
+
 /* route class definition */
 class Route
 {
@@ -43,8 +45,9 @@ public:
     std::vector<Attr> attr;
     Attr self;
 
-    Route(Data &data) : attr(MAX_NODE_IN_ROUTE * MAX_NODE_IN_ROUTE)
+    Route(Data &data)
     {
+        this->attr.reserve(MAX_NODE_IN_ROUTE * MAX_NODE_IN_ROUTE);
         this->node_list.reserve(MAX_NODE_IN_ROUTE);
         this->node_list.push_back(data.DC);
         this->node_list.push_back(data.DC);
@@ -54,12 +57,15 @@ public:
     // attribute
     Attr &gat(int i, int j)
     {
-        return this->attr[i*MAX_NODE_IN_ROUTE + j];
+        int nl_len = int(node_list.size());
+        return this->attr[i * nl_len + j];
     }
 
     void cal_attr(Data &data) //calculate complete attr matrix O(n^2)
     {
-        int end_index = int(node_list.size()) - 1;
+        int nl_len = int(node_list.size());
+        int end_index = nl_len - 1;
+        this->attr.resize(nl_len * nl_len);
         // 1. attribute for each node
         for (int i = 0; i <= end_index; i++)
         {

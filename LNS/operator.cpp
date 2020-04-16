@@ -23,9 +23,10 @@ void maintain_unrouted(int i, int node, int &index, std::vector<std::tuple<int, 
     unrouted_p -= data.node[node].pickup;
 }
 
-double cal_tc(std::vector<int> &nl, double unrouted_d, double unrouted_p, Data &data)
+double cal_tc(std::vector<int> &nl, int inserted_node, int pos, double unrouted_d, double unrouted_p, Data &data)
 {
-    int len = int(nl.size());
+    int ori_len = int(nl.size());
+    int new_len = ori_len + 1;
     double capacity = data.vehicle.capacity;
 
     // RDT and RPT for route
@@ -33,42 +34,72 @@ double cal_tc(std::vector<int> &nl, double unrouted_d, double unrouted_p, Data &
     double rpt = 0.0;
     double route_d = 0.0;
     double route_p = 0.0;
-    std::vector<double> rd(nl.size());
-    std::vector<double> rp(nl.size());
-    std::vector<double> load(nl.size());
-    std::vector<double> cd(nl.size());
-    std::vector<double> cp(nl.size());
 
-    for (int i = 1; i < len; i++)
+    for (int i = 1; i < ori_len; i++)
     {
         route_d += data.node[nl[i]].delivery;
         route_p += data.node[nl[i]].pickup;
     }
+    route_d += data.node[inserted_node].delivery;
+    route_p += data.node[inserted_node].pickup;
+
+    static std::vector<double> rd(MAX_NODE_IN_ROUTE);
+    static std::vector<double> rp(MAX_NODE_IN_ROUTE);
+    static std::vector<double> load(MAX_NODE_IN_ROUTE);
+    static std::vector<double> cd(MAX_NODE_IN_ROUTE);
+    static std::vector<double> cp(MAX_NODE_IN_ROUTE);
 
     load[0] = route_d;
     cd[0] = 0.0;
-    cp[len - 1] = 0.0;
-    for (int i = 1; i < len - 1; i++)
+    cp[new_len - 1] = 0.0;
+    int index = 1;
+    bool checked = false;
+    int pre_node = nl[0];
+    for (int i = 1; i < ori_len; i++)
     {
-        load[i] = load[i - 1] - data.node[nl[i]].delivery + data.node[nl[i]].pickup;
-        cd[i] = cd[i - 1] + data.dist[nl[i - 1]][nl[i]];
-        cp[len - 1 - i] = cp[len - i] + data.dist[nl[len - i]][nl[len - 1 - i]];
+        int node = nl[i];
+        if (i == pos && !checked)
+        {
+            node = inserted_node;
+            i--;
+            checked = true;
+        }
+        load[index] = load[index - 1] - data.node[node].delivery + data.node[node].pickup;
+        cd[index] = cd[index - 1] + data.dist[pre_node][node];
+        pre_node = node;
+        index++;
+    }
+    checked = false;
+    int after_node = nl[ori_len - 1];
+    index = new_len-1;
+    for (int i = ori_len - 1; i > 0; i--)
+    {
+        int node = nl[i - 1];
+        if (i == pos && !checked)
+        {
+            node = inserted_node;
+            i++;
+            checked = true;
+        }
+        cp[index - 1] = cp[index] + data.dist[node][after_node];
+        after_node = node;
+        index--;
     }
 
     rd[0] = capacity - route_d;
-    rp[len - 2] = capacity - route_p;
+    rp[new_len - 2] = capacity - route_p;
 
-    for (int i = 1; i < len - 1; i++)
+    for (int i = 1; i < new_len - 1; i++)
     {
         rd[i] = std::min(rd[i - 1], capacity - load[i]);
-        rp[len - 2 - i] = std::min(rp[len - 1 - i], capacity - load[len - 2 - i]);
+        rp[new_len - 2 - i] = std::min(rp[new_len - 1 - i], capacity - load[new_len - 2 - i]);
     }
 
     double rdt_u = 0.0;
     double rdt_d = 0.0;
     double rpt_u = 0.0;
     double rpt_d = 0.0;
-    for (int i = 0; i < len - 1; i++)
+    for (int i = 0; i < new_len - 1; i++)
     {
         rdt_u += rd[i] * cd[i + 1];
         rdt_d += cd[i + 1];
@@ -93,9 +124,9 @@ double criterion(Route &r, Data &data, int node, int pos, double unrouted_d, dou
     if (data.n_insert == TD) return td;
 
     // TC
-    std::vector<int> tmp_nl = r.node_list;
-    tmp_nl.insert(tmp_nl.begin() + pos, node);
-    double tc = cal_tc(tmp_nl, unrouted_d, unrouted_p, data);
+    // std::vector<int> tmp_nl = r.node_list;
+    // tmp_nl.insert(tmp_nl.begin() + pos, node);
+    double tc = cal_tc(r.node_list, node, pos, unrouted_d, unrouted_p, data);
 
     // RS
     double rs = data.dist[data.DC][node] + data.dist[node][data.DC];
@@ -638,6 +669,8 @@ void two_opt(Solution &s, Data &data, Move &m)
                 (!data.pm[n_l[start-1]][n_l[start+1]] ||
                  !data.pm[n_l[start+1]][n_l[start]] ||
                  !data.pm[n_l[start]][n_l[start+2]]))
+                continue;
+            if (r.gat(start+1, start).num_cus == INFEASIBLE)
                 continue;
             tmp_move.r_indice[0] = r_index;
             tmp_move.r_indice[1] = -2;

@@ -27,7 +27,7 @@ void attr_for_one_node(Data &data, int node, Attr &a)
 
         a.C_E = data.node[node].delivery;
         a.C_L = data.node[node].pickup;
-        a.C_H = std::max(a.C_E, a.C_H);
+        a.C_H = std::max(a.C_E, a.C_L);
     }
 }
 
@@ -92,4 +92,11 @@ std::vector<int> make_tmp_nl(Data &data)
 {
     std::vector<int> nl(2, data.DC);
     return nl;
+}
+
+bool equal_attr(const Attr &a, const Attr &b)
+{
+    if (a.num_cus == b.num_cus && a.dist == b.dist && a.s == b.s && a.e == b.e && a.T_D == b.T_D && a.T_E == b.T_E && a.T_L == b.T_L && a.C_E == b.C_E && a.C_H == b.C_H && a.C_L == b.C_L)
+        return true;
+    return false;
 }

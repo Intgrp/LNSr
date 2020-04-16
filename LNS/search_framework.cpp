@@ -49,13 +49,14 @@ void search_framework(Data &data, Solution &best_s)
             break;
         }
 
+        int tmp_solution_num = int(data.destroy_opts.size()) * int(data.repair_opts.size());
+        vector<Solution> s_vector(tmp_solution_num);
         while (no_improve < data.escape_local_optima)
         {
-            int tmp_solution_num = int(data.destroy_opts.size()) * int(data.repair_opts.size());
-
-            vector<Solution> s_vector(tmp_solution_num, s);
+            for (int i = 0; i < tmp_solution_num; i++)
+                s_vector[i] = s;
+            
             perturb(s_vector, data);
-
             int best_index = -1;
             double best_cost = double(INFINITY);
             for (int i = 0; i < tmp_solution_num; i++)
@@ -99,6 +100,7 @@ void search_framework(Data &data, Solution &best_s)
     best_s.output(data);
     printf("Time to find this solution: %d.\n", int(find_best_time));
     printf("Time to surpass BKS: %d.\n", int(find_bks_time));
+    // best_s.check(data);
 }
 
 void initialization(Solution &s, Data &data, int run)
