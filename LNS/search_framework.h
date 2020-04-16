@@ -15,4 +15,4 @@ using namespace std;
 
 void search_framework(Data &data, Solution &best_s);
 
-void initialization(Solution &s, Data &data);
+void initialization(Solution &s, Data &data, int run);

@@ -165,6 +165,11 @@ Data::Data(ArgumentParser &parser)
     printf("Starting/end time of DC: %.4f,%.4f\n", this->start_time, this->end_time);
 
     std::cout << '\n';
+    if (parser.exists("random_seed"))
+        this->seed = std::stoi(parser.retrieve<std::string>("random_seed"));
+    this->rng.seed(this->seed);
+    printf("Initial random seed: %d\n", this->seed);
+
     // set parameters
     if (parser.exists("pruning"))
     {
@@ -198,6 +203,21 @@ Data::Data(ArgumentParser &parser)
         this->init = parser.retrieve<std::string>("init");
     printf("Insertion for initialization: %s\n", this->init.c_str());
 
+    if (parser.exists("latin"))
+    {
+        double step = 1.0 / (LATIN_NUM-1);
+        for (int i = 0; i < LATIN_NUM; i++)
+        {
+            for (int j = 0; j < LATIN_NUM; j++)
+            {
+                double lambda = std::min(1.0, step*i);
+                double gamma = std::min(1.0, step*j);
+                this->latin.push_back(std::make_tuple(lambda, gamma));
+            }
+        }
+        std::shuffle(this->latin.begin(), this->latin.end(), this->rng);
+    }
+    printf("Latin sampling for Lambda and Gamma for rcrs insertion: on\n");
     if (parser.exists("O_1_eval"))
     {
         printf("O(1) evaluation: on\n");
@@ -299,11 +319,6 @@ Data::Data(ArgumentParser &parser)
 
     if (parser.exists("bks"))
         this->bks = std::stod(parser.retrieve<std::string>("bks"));
-
-    if (parser.exists("random_seed"))
-        this->seed = std::stoi(parser.retrieve<std::string>("random_seed"));
-    this->rng.seed(this->seed);
-    printf("Initial random seed: %d\n", this->seed);
 
     int c_num = this->customer_num;
     for (int i = 0; i <= c_num; i++)

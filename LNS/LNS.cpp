@@ -45,6 +45,7 @@ int main(int argc, char **argv)
     parser.addArgument("--runs", 1);
     parser.addArgument("--ksize", 1);
     parser.addArgument("--init", 1);
+    parser.addArgument("--latin");
     parser.addArgument("--O_1_eval");
     parser.addArgument("--two_opt");
     parser.addArgument("--two_opt_star");

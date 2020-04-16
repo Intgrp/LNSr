@@ -37,7 +37,7 @@ void search_framework(Data &data, Solution &best_s)
         printf("---------------------------------Run %d---------------------------\n", run);
         int no_improve = 0;
         Solution s(data);
-        initialization(s, data);
+        initialization(s, data, run);
         // do local search
         do_local_search(s, data);
         printf("Local optima. Cost %.4f\n", s.cost);
@@ -101,17 +101,24 @@ void search_framework(Data &data, Solution &best_s)
     printf("Time to surpass BKS: %d.\n", int(find_bks_time));
 }
 
-void initialization(Solution &s, Data &data)
+void initialization(Solution &s, Data &data, int run)
 {
     printf("Initialization, using %s method. ", data.init.c_str());
     if (data.init == RCRS)
     {
         data.n_insert = RCRS;
-        double lambda = rand(0, 1, data.rng);
-        double gamma = rand(0, 1, data.rng);
-        printf("lambda, gamma: %f, %f\n", lambda, gamma);
-        get<0>(data.lambda_gamma) = lambda;
-        get<1>(data.lambda_gamma) = gamma;
+        if (int(data.latin.size()) > 0)
+        {
+            data.lambda_gamma = data.latin[run];
+        }
+        else
+        {
+            double lambda = rand(0, 1, data.rng);
+            double gamma = rand(0, 1, data.rng);
+            get<0>(data.lambda_gamma) = lambda;
+            get<1>(data.lambda_gamma) = gamma;
+        }
+        printf("lambda, gamma: %f, %f\n", get<0>(data.lambda_gamma), get<1>(data.lambda_gamma));
         new_route_insertion(s, data);
     }
     else if (data.init == TD)

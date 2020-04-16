@@ -62,6 +62,7 @@ public:
     std::mt19937 rng; // random number generator
     std::string init = DEFAULT_INIT; // initialization method
     std::tuple<double, double> lambda_gamma = std::make_tuple(0.0,0.0); // params of RCRS method
+    std::vector<std::tuple<double, double>> latin;
     std::string n_insert = " "; //which insertion method is used
 
     bool two_opt_star = DEFAULT_2_OPT_STAR; //2-opt*

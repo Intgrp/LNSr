@@ -43,6 +43,7 @@ const std::string RCRS = "rcrs"; // RCRS insertion heuristic
 const std::string TD = "td";  // travel-distance based insertion
 const int K = -1; // the number of generated solutions for producing a solution
 const std::string DEFAULT_INIT = RCRS;
+const double LATIN_NUM = 8;
 
 /* removal and insertion */
 const double DEFAULT_ALPHA = 1.0; // relatedness para
