@@ -183,7 +183,7 @@ def test():
                     v_number = int(line.split(':')[-1].strip('. '))
                     break
             total_cost = total_cost - dispatch * v_number
-            total_cost = round(decimal.Decimal(total_cost), 2)
+            total_cost = float(round(decimal.Decimal(total_cost), 2))
             if v_number < baselines[ins_id][0]:
                 better += 1
             elif v_number > baselines[ins_id][0]:
